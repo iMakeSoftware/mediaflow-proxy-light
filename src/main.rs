@@ -625,9 +625,8 @@ async fn main() -> std::io::Result<()> {
     })
     .workers(config.server.workers);
     let bind_hosts: Vec<&str> = config.server.host.iter().map(|h| match h.as_str() {
-        "::" => "[::]",
-        "*" => "[::]",
-        other => other,
+    "[::]" => "::",
+    other => other,
     }).collect();
     for host in bind_hosts {
         http_server = http_server.bind((host, config.server.port))?;
