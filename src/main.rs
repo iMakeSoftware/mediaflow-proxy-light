@@ -624,12 +624,19 @@ async fn main() -> std::io::Result<()> {
             }))
     })
     .workers(config.server.workers);
-    let bind_hosts: Vec<&str> = config.server.host.iter().map(|h| match h.as_str() {
-    "[::]" => "::",
-    other => other,
-    }).collect();
-    for host in bind_hosts {
-        http_server = http_server.bind((host, config.server.port))?;
+    for host in &config.server.host {
+        let addr_str = if host.contains(':') {
+            format!("[{}]:{}", host, config.server.port)
+        } else {
+            format!("{}:{}", host, config.server.port)
+        };
+        let socket_addr: std::net::SocketAddr = addr_str.parse().map_err(|e| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("Invalid bind address '{}': {}", addr_str, e),
+            )
+        })?;
+        http_server = http_server.bind(socket_addr)?;
     }
     http_server.run().await
 }
