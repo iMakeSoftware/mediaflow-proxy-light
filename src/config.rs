@@ -790,7 +790,17 @@ where
     }
 
     match StringOrArray::deserialize(deserializer)? {
-        StringOrArray::Single(s) => Ok(vec![s]),
+        StringOrArray::Single(s) => {
+            // If the string contains commas, treat it as a comma-separated list.
+            if s.contains(',') {
+                Ok(s.split(',')
+                    .map(|s| s.trim().to_string())
+                    .filter(|s| !s.is_empty())
+                    .collect())
+            } else {
+                Ok(vec![s])
+            }
+        },
         StringOrArray::Multiple(v) => Ok(v),
     }
 }
