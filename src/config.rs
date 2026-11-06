@@ -1,6 +1,6 @@
 use config::{Map, Value};
 use regex::Regex;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 use std::path::Path;
 use tracing::warn;
@@ -8,15 +8,11 @@ use url::Url;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct ServerConfig {
-    pub host: String,
+    /// Bind to one or multiple host interfaces (e.g. "127.0.0.1" or ["127.0.0.1", "::1"])
+    #[serde(default = "default_host", deserialize_with = "deserialize_single_or_array")]
+    pub host: Vec<String>,
     pub port: u16,
     pub workers: usize,
-    /// Public URL path prefix for generated URLs behind a reverse proxy.
-    ///
-    /// Empty string means no prefix. Non-empty values are normalized to start
-    /// with `/` and not end with `/`, e.g. `/mediaflow` or `/api/v1`.
-    /// Values containing whitespace, control characters, or URL delimiters are
-    /// rejected during configuration loading.
     #[serde(default)]
     pub path: String,
 }
@@ -610,7 +606,8 @@ impl Config {
     pub fn from_env() -> Result<Self, config::ConfigError> {
         let mut builder = config::Config::builder()
             // Server
-            .set_default("server.host", "127.0.0.1")?
+            .set_default("server.host", vec!["0.0.0.0"])? 
+            // Changed to Vec
             .set_default("server.port", 8888)?
             .set_default("server.workers", 4)?
             .set_default("server.path", "")?
@@ -774,5 +771,26 @@ mod tests {
     #[test]
     fn normalize_server_path_rejects_whitespace() {
         assert!(normalize_server_path(" /mediaflow ").is_err());
+    }
+}
+
+fn default_host() -> Vec<String> {
+    vec!["0.0.0.0".to_string()]
+}
+
+fn deserialize_single_or_array<'de, D>(deserializer: D) -> Result<Vec<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum StringOrArray {
+        Single(String),
+        Multiple(Vec<String>),
+    }
+
+    match StringOrArray::deserialize(deserializer)? {
+        StringOrArray::Single(s) => Ok(vec![s]),
+        StringOrArray::Multiple(v) => Ok(v),
     }
 }
