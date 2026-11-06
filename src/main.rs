@@ -1,3 +1,4 @@
+use socket2::{Domain, Protocol, Socket, Type};
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
@@ -636,7 +637,16 @@ async fn main() -> std::io::Result<()> {
                 format!("Invalid bind address '{}': {}", addr_str, e),
             )
         })?;
-        http_server = http_server.bind(socket_addr)?;
+        let domain = if socket_addr.is_ipv6() { Domain::IPV6 } else { Domain::IPV4 };
+        let socket = Socket::new(domain, Type::STREAM, Some(Protocol::TCP))?;
+        socket.set_reuse_address(true)?;
+        if socket_addr.is_ipv6() {
+            socket.set_only_v6(true)?;
+        }
+        socket.bind(&socket_addr.into())?;
+        socket.listen(1024)?;
+        let listener: std::net::TcpListener = socket.into();
+        http_server = http_server.listen(listener)?;
     }
     http_server.run().await
 }
