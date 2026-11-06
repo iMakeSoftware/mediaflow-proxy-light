@@ -146,12 +146,12 @@ async fn main() -> std::io::Result<()> {
     )));
 
     tracing::info!(
-        "Starting MediaFlow Proxy Light on {}:{}",
-        server_config.server.host,
-        server_config.server.port
+    "Starting MediaFlow Proxy Light on [{}]:{}",
+    server_config.server.host.join(", "),
+    server_config.server.port
     );
 
-    HttpServer::new(move || {
+    let mut http_server = HttpServer::new(move || { 
         let config = Arc::clone(&server_config);
         let cors = Cors::permissive();
         let metrics = app_metrics.clone();
@@ -623,8 +623,14 @@ async fn main() -> std::io::Result<()> {
                 }))
             }))
     })
-    .workers(config.server.workers)
-    .bind((config.server.host.as_str(), config.server.port))?
-    .run()
-    .await
+    .workers(config.server.workers);
+    let bind_hosts: Vec<&str> = config.server.host.iter().map(|h| match h.as_str() {
+        "::" => "[::]",
+        "*" => "[::]",
+        other => other,
+    }).collect();
+    for host in bind_hosts {
+        http_server = http_server.bind((host, config.server.port))?;
+    }
+    http_server.run().await
 }
