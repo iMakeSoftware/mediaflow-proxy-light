@@ -151,7 +151,7 @@ async fn main() -> std::io::Result<()> {
     server_config.server.port
     );
 
-    let mut http_server = HttpServer::new(move || { 
+    let mut http_server = HttpServer::new(move || {
         let config = Arc::clone(&server_config);
         let cors = Cors::permissive();
         let metrics = app_metrics.clone();
