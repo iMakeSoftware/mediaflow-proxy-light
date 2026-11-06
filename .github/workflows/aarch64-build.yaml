@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v0.2.0). Leave empty to auto-increment patch version.'
+        required: false
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_VERSION: 1.95.0
+
+permissions:
+  contents: write    # Required for creating releases, tags, and uploading assets
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Build aarch64 Linux binary
+  # ---------------------------------------------------------------------------
+  build-aarch64-binary:
+    name: Build aarch64 Linux Binary
+    runs-on: ubuntu-24.04-arm 
+    
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Fetch all history and tags so we can calculate the next version
+          fetch-depth: 0 
+
+      - name: Determine Release Tag
+        id: tag
+        run: |
+          # If a manual override was provided in the UI, use it
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            NEW_TAG="${{ github.event.inputs.tag }}"
+          else
+            git fetch --tags
+            # Get the highest semantic version tag
+            LATEST_TAG=$(git tag -l "v*" | sort -V | tail -n 1)
+            
+            if [ -z "$LATEST_TAG" ]; then
+              NEW_TAG="v0.1.0"
+            else
+              # Strip the 'v' prefix and split into major.minor.patch
+              VERSION=${LATEST_TAG#v}
+              IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+              
+              # Increment the patch version by 1
+              PATCH=$((PATCH + 1))
+              NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+            fi
+          fi
+          
+          echo "new_tag=$NEW_TAG" >> $GITHUB_OUTPUT
+          echo "🚀 Release tag set to: $NEW_TAG"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: aarch64-unknown-linux-gnu
+
+      - name: Build
+        run: cargo build --release --target aarch64-unknown-linux-gnu
+
+      - name: Create Release and Upload Binary
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: target/aarch64-unknown-linux-gnu/release/mediaflow-proxy-light
+          asset_name: mediaflow-proxy-light-linux-aarch64
+          # Uses the dynamically generated tag (or manual override)
+          tag: ${{ steps.tag.outputs.new_tag }}
+          overwrite: true
