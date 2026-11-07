@@ -132,7 +132,7 @@ rquest-util = "2"
 aes = "0.8"
 cbc = { version = "0.1", features = ["alloc"] }
 cipher = { version = "0.4", features = ["block-padding"] }
-ctr = "0.10"
+ctr = "0.9"
 aes-gcm = "0.10"
 hmac = "0.12"
 sha2 = "0.11"
