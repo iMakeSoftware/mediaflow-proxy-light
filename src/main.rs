@@ -618,7 +618,6 @@ async fn main() -> std::io::Result<()> {
                         .content_type(mime.as_ref())
                         .body(content.data.into_owned());
                 }
-
                 actix_web::HttpResponse::NotFound().json(serde_json::json!({
                     "error": "Not Found"
                 }))
@@ -628,7 +627,8 @@ async fn main() -> std::io::Result<()> {
     for host in &config.server.host {
         let addr_str = if host.contains(':') {
             format!("[{}]:{}", host, config.server.port)
-        } else {
+        }
+        else {
             format!("{}:{}", host, config.server.port)
         };
         let socket_addr: std::net::SocketAddr = addr_str.parse().map_err(|e| {
@@ -637,7 +637,12 @@ async fn main() -> std::io::Result<()> {
                 format!("Invalid bind address '{}': {}", addr_str, e),
             )
         })?;
-        let domain = if socket_addr.is_ipv6() { Domain::IPV6 } else { Domain::IPV4 };
+        let domain = if socket_addr.is_ipv6() {
+            Domain::IPV6
+        }
+        else {
+            Domain::IPV4
+        };
         let socket = Socket::new(domain, Type::STREAM, Some(Protocol::TCP))?;
         socket.set_reuse_address(true)?;
         if socket_addr.is_ipv6() {
