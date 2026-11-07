@@ -1,7 +1,7 @@
-use socket2::{Domain, Protocol, Socket, Type};
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
+use socket2::{Domain, Protocol, Socket, Type};
 use std::sync::Arc;
 use tracing_subscriber::{fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -147,9 +147,9 @@ async fn main() -> std::io::Result<()> {
     )));
 
     tracing::info!(
-    "Starting MediaFlow Proxy Light on [{}]:{}",
-    server_config.server.host.join(", "),
-    server_config.server.port
+        "Starting MediaFlow Proxy Light on [{}]:{}",
+        server_config.server.host.join(", "),
+        server_config.server.port
     );
 
     let mut http_server = HttpServer::new(move || {
@@ -627,8 +627,7 @@ async fn main() -> std::io::Result<()> {
     for host in &config.server.host {
         let addr_str = if host.contains(':') {
             format!("[{}]:{}", host, config.server.port)
-        }
-        else {
+        } else {
             format!("{}:{}", host, config.server.port)
         };
         let socket_addr: std::net::SocketAddr = addr_str.parse().map_err(|e| {
@@ -639,8 +638,7 @@ async fn main() -> std::io::Result<()> {
         })?;
         let domain = if socket_addr.is_ipv6() {
             Domain::IPV6
-        }
-        else {
+        } else {
             Domain::IPV4
         };
         let socket = Socket::new(domain, Type::STREAM, Some(Protocol::TCP))?;

@@ -9,7 +9,10 @@ use url::Url;
 #[derive(Debug, Deserialize, Clone)]
 pub struct ServerConfig {
     /// Bind to one or multiple host interfaces (e.g. "127.0.0.1" or ["127.0.0.1", "::1"])
-    #[serde(default = "default_host", deserialize_with = "deserialize_single_or_array")]
+    #[serde(
+        default = "default_host",
+        deserialize_with = "deserialize_single_or_array"
+    )]
     pub host: Vec<String>,
     pub port: u16,
     pub workers: usize,
@@ -606,7 +609,7 @@ impl Config {
     pub fn from_env() -> Result<Self, config::ConfigError> {
         let mut builder = config::Config::builder()
             // Server
-            .set_default("server.host", vec!["0.0.0.0"])? 
+            .set_default("server.host", vec!["0.0.0.0"])?
             // Changed to Vec
             .set_default("server.port", 8888)?
             .set_default("server.workers", 4)?
@@ -800,7 +803,7 @@ where
             } else {
                 Ok(vec![s])
             }
-        },
+        }
         StringOrArray::Multiple(v) => Ok(v),
     }
 }
