@@ -1474,34 +1474,32 @@ checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
 
 [[package]]
 name = "grammers-client"
-version = "0.7.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85c97c2ce2ade23eb00a35d192929a678bd5b1650c7f36eea8a7f0ecd2c79c33"
+checksum = "3237b0c5916c97477e0ef16154b1f2e759b252e1a399cd718abd9466fe9de107"
 dependencies = [
  "chrono",
  "futures-util",
  "grammers-crypto",
- "grammers-mtproto",
  "grammers-mtsender",
  "grammers-session",
- "grammers-tl-types",
- "locate-locale",
+ "grammers-tl-types 0.9.0",
  "log",
  "md5",
  "mime_guess",
- "os_info",
  "pin-project-lite",
  "tokio",
 ]
 
 [[package]]
 name = "grammers-crypto"
-version = "0.7.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17c75ce8d715d407a5767a94b5fd7b210106ec5c29c7be8ff4dfdca58de4dcf6"
+checksum = "68fe353d0d566b5b1171ce92c981a0d221db8754bb37524f1159bd5d693164fd"
 dependencies = [
  "aes",
- "getrandom 0.2.17",
+ "ctr",
+ "getrandom 0.4.2",
  "glass_pumpkin",
  "hmac",
  "num-bigint",
@@ -1513,16 +1511,16 @@ dependencies = [
 
 [[package]]
 name = "grammers-mtproto"
-version = "0.7.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d057562ccd5ac7437683534634e469875db27827a7febd42cb6b775ffd01dff"
+checksum = "4d2ade3e0db6feef2a411d0a6a4820005f3a9c17d1bddcfab2603c0dfbb50cf8"
 dependencies = [
  "bytes",
  "crc32fast",
  "flate2",
- "getrandom 0.2.17",
+ "getrandom 0.4.2",
  "grammers-crypto",
- "grammers-tl-types",
+ "grammers-tl-types 0.9.0",
  "log",
  "num-bigint",
  "sha1 0.10.6",
@@ -1530,30 +1528,31 @@ dependencies = [
 
 [[package]]
 name = "grammers-mtsender"
-version = "0.7.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49b077919dbbacab7644f8479f0c4456625714313334986b4f7c812691aac96a"
+checksum = "fae24e1d8f1de2c777b025c64eedb1578c142cc2786cc8d165f62f54a6e97809"
 dependencies = [
  "bytes",
- "futures-util",
  "grammers-crypto",
  "grammers-mtproto",
- "grammers-tl-types",
+ "grammers-session",
+ "grammers-tl-types 0.9.0",
+ "locate-locale",
  "log",
+ "os_info",
  "tokio",
 ]
 
 [[package]]
 name = "grammers-session"
-version = "0.7.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "03d5fea440a79a78d0d68b57f062d737a0aed0decee813bf3c232252f3b3f7da"
+checksum = "e5ad9fe6e7acc0eaf653460233fce428bcdcd0f5648768bd8941145a430b84bb"
 dependencies = [
- "grammers-crypto",
- "grammers-tl-gen",
- "grammers-tl-parser",
- "grammers-tl-types",
+ "futures-core",
+ "grammers-tl-types 0.9.0",
  "log",
+ "tokio",
 ]
 
 [[package]]
@@ -1561,6 +1560,15 @@ name = "grammers-tl-gen"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c214cadfba8cd8ef9368bdf273f56f688537b0310ea42f91fc746f4fd59b70b9"
+dependencies = [
+ "grammers-tl-parser",
+]
+
+[[package]]
+name = "grammers-tl-gen"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0e27a47ca08e062c08d76d7a01eaf151d70980ce9b9dc66cf46a4902dd8a37c4"
 dependencies = [
  "grammers-tl-parser",
 ]
@@ -1580,7 +1588,17 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49566409a69e4ff3340c1b6f392e5754c89fa1ea43be4584ac8ee74c1eb0643a"
 dependencies = [
- "grammers-tl-gen",
+ "grammers-tl-gen 0.7.0",
+ "grammers-tl-parser",
+]
+
+[[package]]
+name = "grammers-tl-types"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a25e1f6fa6142fda4f3938d6b5cd1d74848e39a845ff18a1c632200285b4d8a4"
+dependencies = [
+ "grammers-tl-gen 0.9.0",
  "grammers-tl-parser",
 ]
 
@@ -2247,9 +2265,9 @@ dependencies = [
 
 [[package]]
 name = "md5"
-version = "0.7.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "490cc448043f947bae3cbee9c203358d62dbee0db12107a74be5c30ccfd09771"
+checksum = "7ebb8d8732c6a6df3d8f032a82911cfc747e00efb95cc46e8d0acd5b5b88570c"
 
 [[package]]
 name = "mediaflow-proxy-light"
@@ -2271,7 +2289,7 @@ dependencies = [
  "deadpool-redis",
  "futures",
  "grammers-client",
- "grammers-tl-types",
+ "grammers-tl-types 0.7.0",
  "hex",
  "hmac",
  "m3u8-rs",
