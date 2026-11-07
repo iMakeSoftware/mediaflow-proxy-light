@@ -19,7 +19,7 @@ jobs:
   # ---------------------------------------------------------------------------
   check-and-test:
     name: Check & Test (${{ matrix.rust }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
       matrix:
@@ -46,7 +46,7 @@ jobs:
 
       - name: Clippy (Lint)
         # We use --all-features to ensure feature-gated code is also linted
-        run: cargo clippy --target aarch64-unknown-linux-gnu --features "${{ env.LINUX_FEATURES }}" -- -D warnings
+        run: cargo clippy --all-targets --features "${{ env.LINUX_FEATURES }}" -- -D warnings
 
       - name: Run tests
         # We use --all-features to ensure tests for hls, mpd, xtream, etc. run
