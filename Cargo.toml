@@ -149,7 +149,7 @@ thiserror = "2.0"
 
 # Configuration
 config = "0.15"
-socket2 = "0.5"
+socket2 = "0.6"
 
 # Logging
 tracing = "0.1"
