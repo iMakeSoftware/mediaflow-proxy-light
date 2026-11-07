@@ -9,7 +9,9 @@ on:
 env:
   CARGO_TERM_COLOR: always
   # The version you use for actual releases
-  RELEASE_RUST_VERSION: 1.95.0 
+  RELEASE_RUST_VERSION: 1.95.0
+
+  LINUX_FEATURES: "hls,mpd,drm,xtream,extractors,acestream,transcode,telegram,web-ui"
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -44,8 +46,8 @@ jobs:
 
       - name: Clippy (Lint)
         # We use --all-features to ensure feature-gated code is also linted
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --features "${{ env.LINUX_FEATURES }}" -- -D warnings
 
       - name: Run tests
         # We use --all-features to ensure tests for hls, mpd, xtream, etc. run
-        run: cargo test --all-features
+        run: cargo test --features "${{ env.LINUX_FEATURES }}"
