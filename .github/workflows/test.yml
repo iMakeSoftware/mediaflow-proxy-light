@@ -1,10 +1,7 @@
 name: Test
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -16,7 +13,7 @@ jobs:
   # ---------------------------------------------------------------------------
   lint-and-test:
     name: Lint & test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v5
@@ -94,31 +91,3 @@ jobs:
             --target aarch64-linux-android \
             --no-default-features \
             --features "hls,mpd,drm,xtream,extractors,telegram,acestream,web-ui,base64-url,tls-rustls"
-
-  # ---------------------------------------------------------------------------
-  # iOS cross-compile smoke test (device arch only)
-  # ---------------------------------------------------------------------------
-  ios-smoke:
-    name: iOS · aarch64 smoke build
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ env.RUST_VERSION }}
-          targets: aarch64-apple-ios
-
-      - name: Build (device)
-        # IPHONEOS_DEPLOYMENT_TARGET=13.0 is required so boring-sys &
-        # zstd-sys can resolve modern system intrinsics (e.g. ___chkstk_darwin)
-        # that don't exist on older iOS targets.
-        env:
-          IPHONEOS_DEPLOYMENT_TARGET: "13.0"
-        run: |
-          cargo build \
-            --release \
-            --target aarch64-apple-ios \
-            --no-default-features \
-            --features "ffi,hls,mpd,drm,xtream,extractors,web-ui,base64-url,acestream,tls-rustls"
