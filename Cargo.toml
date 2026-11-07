@@ -191,7 +191,7 @@ deadpool-redis = { version = "0.23", features = ["rt_tokio_1"], optional = true 
 redis = { version = "0.27", features = ["tokio-comp", "connection-manager"], optional = true }
 
 # Telegram MTProto
-grammers-client = { version = "0.7", optional = true }
+grammers-client = { version = "0.9", optional = true }
 grammers-tl-types = { version = "0.7", optional = true }
 
 # Vendored OpenSSL (only needed for legacy builds; prefer rustls)
