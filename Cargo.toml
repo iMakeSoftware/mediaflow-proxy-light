@@ -135,7 +135,7 @@ cipher = { version = "0.4", features = ["block-padding"] }
 ctr = "0.9"
 aes-gcm = "0.10"
 hmac = "0.12"
-sha2 = "0.10"
+sha2 = "0.11"
 rand = "0.9.3"
 base64 = "0.22.1"
 
