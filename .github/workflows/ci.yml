@@ -11,7 +11,7 @@ env:
   # The version you use for actual releases
   RELEASE_RUST_VERSION: 1.95.0
 
-  LINUX_FEATURES: "hls,mpd,drm,xtream,extractors,acestream,transcode,telegram,web-ui"
+  LINUX_FEATURES: "extractors,transcode,web-ui"
 
 jobs:
   # ---------------------------------------------------------------------------
