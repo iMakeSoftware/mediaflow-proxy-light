@@ -176,7 +176,7 @@ quick-xml = { version = "0.37", features = ["serialize"] }
 moka = { version = "0.12", features = ["future"] }
 
 # HTML scraping for extractors (Phase 5)
-scraper = "0.20"
+scraper = "0.29"
 
 # ---------------------------------------------------------------------------
 # Optional / feature-gated dependencies
