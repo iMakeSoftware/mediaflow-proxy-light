@@ -205,7 +205,7 @@ mod tests {
     fn test_config() -> Arc<Config> {
         Arc::new(Config {
             server: ServerConfig {
-                host: "127.0.0.1".to_string(),
+                host: vec!["127.0.0.1".to_string()],
                 port: 8080,
                 workers: 1,
                 path: String::new(),
