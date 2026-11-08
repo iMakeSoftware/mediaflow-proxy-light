@@ -2259,7 +2259,7 @@ dependencies = [
  "moka",
  "openssl",
  "quick-xml",
- "rand 0.9.5",
+ "rand 0.10.3",
  "redis",
  "regex",
  "reqwest",
