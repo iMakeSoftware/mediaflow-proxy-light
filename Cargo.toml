@@ -170,7 +170,7 @@ time = "0.3"
 m3u8-rs = "6"
 
 # XML parsing for DASH/MPD (Phase 2)
-quick-xml = { version = "0.37", features = ["serialize"] }
+quick-xml = { version = "0.42", features = ["serialize"] }
 
 # In-memory TTL cache (Phase 1)
 moka = { version = "0.12", features = ["future"] }
