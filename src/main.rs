@@ -1,7 +1,7 @@
-use socket2::{Domain, Protocol, Socket, Type};
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
+use socket2::{Domain, Protocol, Socket, Type};
 use std::sync::Arc;
 use tracing_subscriber::{fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -147,9 +147,9 @@ async fn main() -> std::io::Result<()> {
     )));
 
     tracing::info!(
-    "Starting MediaFlow Proxy Light on [{}]:{}",
-    server_config.server.host.join(", "),
-    server_config.server.port
+        "Starting MediaFlow Proxy Light on [{}]:{}",
+        server_config.server.host.join(", "),
+        server_config.server.port
     );
 
     let mut http_server = HttpServer::new(move || {
@@ -637,7 +637,11 @@ async fn main() -> std::io::Result<()> {
                 format!("Invalid bind address '{}': {}", addr_str, e),
             )
         })?;
-        let domain = if socket_addr.is_ipv6() { Domain::IPV6 } else { Domain::IPV4 };
+        let domain = if socket_addr.is_ipv6() {
+            Domain::IPV6
+        } else {
+            Domain::IPV4
+        };
         let socket = Socket::new(domain, Type::STREAM, Some(Protocol::TCP))?;
         socket.set_reuse_address(true)?;
         if socket_addr.is_ipv6() {
