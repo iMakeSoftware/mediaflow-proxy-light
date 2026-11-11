@@ -1,4 +1,4 @@
-name: Release
+name: Minimal Arm64 Linux Build
 
 on:
   workflow_dispatch:
@@ -63,8 +63,7 @@ jobs:
           targets: aarch64-unknown-linux-gnu
 
       - name: Build
-        run: cargo build --release --target aarch64-unknown-linux-gnu
-
+        run: cargo build --release --target aarch64-unknown-linux-gnu --no-default-features --features "web-ui,base64-url,tls-rustls"
       - name: Create Release and Upload Binary
         uses: svenstaro/upload-release-action@v2
         with:
