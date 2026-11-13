@@ -758,25 +758,6 @@ fn normalize_server_path(path: &str) -> Result<String, config::ConfigError> {
     Ok(normalized)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::normalize_server_path;
-
-    #[test]
-    fn normalize_server_path_collapses_repeated_slashes() {
-        assert_eq!(
-            normalize_server_path("/foo//bar///baz").unwrap(),
-            "/foo/bar/baz"
-        );
-        assert_eq!(normalize_server_path("////").unwrap(), "");
-    }
-
-    #[test]
-    fn normalize_server_path_rejects_whitespace() {
-        assert!(normalize_server_path(" /mediaflow ").is_err());
-    }
-}
-
 fn default_host() -> Vec<String> {
     vec!["0.0.0.0".to_string()]
 }
@@ -805,5 +786,25 @@ where
             }
         }
         StringOrArray::Multiple(v) => Ok(v),
+    }
+}
+
+#[cfg(test)]
+
+mod tests {
+    use super::normalize_server_path;
+
+    #[test]
+    fn normalize_server_path_collapses_repeated_slashes() {
+        assert_eq!(
+            normalize_server_path("/foo//bar///baz").unwrap(),
+            "/foo/bar/baz"
+        );
+        assert_eq!(normalize_server_path("////").unwrap(), "");
+    }
+
+    #[test]
+    fn normalize_server_path_rejects_whitespace() {
+        assert!(normalize_server_path(" /mediaflow ").is_err());
     }
 }
