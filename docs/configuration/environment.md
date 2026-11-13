@@ -6,7 +6,7 @@ All settings can be configured via environment variables using the `APP__<SECTIO
 
 | Variable | Default | Description |
 |---|---|---|
-| `APP__SERVER__HOST` | `127.0.0.1` | Bind address. Set to `0.0.0.0` to accept connections from all interfaces (required for Docker and remote access). |
+| `APP__SERVER__HOST` | `127.0.0.1` | Bind address or multiple addresses (comma seperated). Set to `0.0.0.0,::` to accept connections from all interfaces, or `0.0.0.0` for all IPv4 only interfaces (required for Docker and remote access). |
 | `APP__SERVER__PORT` | `8888` | Listen port |
 | `APP__SERVER__WORKERS` | `4` | Number of worker threads |
 | `APP__SERVER__PATH` | *(none)* | Public URL path prefix for deployments served under a reverse-proxy subpath, e.g. `https://example.com/mediaflow`. Must start with `/` when set and should not end with `/`; the app normalizes a missing leading slash and strips trailing slashes. Example: `/mediaflow/prefix`. |
