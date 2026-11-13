@@ -23,7 +23,7 @@ fn test_config_from_env() {
     let _guard = setup();
 
     // Set environment variables
-    env::set_var("APP__SERVER__HOST", "127.0.0.1");
+    env::set_var("APP__SERVER__HOST", "0.0.0.0");
     env::set_var("APP__SERVER__PORT", "8888"); // Match the default port in Config
     env::set_var("APP__SERVER__PATH", "/mediaflow/prefix");
     env::set_var("APP__AUTH__API_PASSWORD", "test_password");
@@ -32,7 +32,7 @@ fn test_config_from_env() {
     let config = Config::from_env().unwrap();
 
     // Assert configuration values
-    assert_eq!(config.server.host, "127.0.0.1");
+    assert_eq!(config.server.host, vec!["0.0.0.0"]);
     assert_eq!(config.server.port, 8888); // Updated to match default port
     assert_eq!(config.server.path, "/mediaflow/prefix");
     assert_eq!(config.auth.api_password, "test_password");
@@ -84,7 +84,7 @@ fn test_transport_routes_from_toml() {
 
     let config_content = r#"
 [server]
-host = "127.0.0.1"
+host = ["0.0.0.0"]
 port = 8888
 
 [auth]
