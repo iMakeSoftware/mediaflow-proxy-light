@@ -790,7 +790,6 @@ where
 }
 
 #[cfg(test)]
-
 mod tests {
     use super::normalize_server_path;
 
