@@ -192,7 +192,7 @@ redis = { version = "0.27", features = ["tokio-comp", "connection-manager"], opt
 
 # Telegram MTProto
 grammers-client = { version = "0.7", optional = true }
-grammers-tl-types = { version = "0.7", optional = true }
+grammers-tl-types = { version = "0.12", optional = true }
 
 # Vendored OpenSSL (only needed for legacy builds; prefer rustls)
 openssl = { version = "0.10", features = ["vendored"], optional = true }
