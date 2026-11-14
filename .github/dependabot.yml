@@ -1,0 +1,47 @@
+version: 2
+updates:
+  # ---------------------------------------------------------------------------
+  # Rust Dependencies (Cargo)
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    
+    # Limit open PRs to prevent being overwhelmed
+    open-pull-requests-limit: 10
+
+    # Group all minor and patch updates into a single PR.
+    # This ensures dependencies are updated as a compatible batch and tested 
+    # together by your CI, preventing fragmented breakage.
+    groups:
+      rust-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+
+    # Ignore major version updates. 
+    # Major bumps (e.g., actix-web 4.x -> 5.x) often require code changes.
+    # Ignoring them forces you to review and update them manually when ready.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # ---------------------------------------------------------------------------
+  # GitHub Actions (Keep your CI/CD pipeline secure and up-to-date)
+  # ---------------------------------------------------------------------------
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    
+    groups:
+      github-actions:
+        patterns:
+          - "*"
