@@ -9,7 +9,7 @@ CONFIG_PATH=/path/to/config.toml mediaflow-proxy-light
 ```
 
 A fully commented example ships with the source tree as
-[`config-example.toml`](https://github.com/mhdzumair/MediaFlow-Proxy-Light/blob/main/config-example.toml):
+[`config-example.toml`](https://github.com/iMakeSoftware/MediaFlow-Proxy-Light/blob/main/config-example.toml):
 
 ```bash
 wget https://raw.githubusercontent.com/mhdzumair/MediaFlow-Proxy-Light/main/config-example.toml -O config.toml
@@ -24,7 +24,7 @@ wget https://raw.githubusercontent.com/mhdzumair/MediaFlow-Proxy-Light/main/conf
 # Server
 # ===========================================================================
 [server]
-host    = "127.0.0.1"   # Use "0.0.0.0" for Docker or remote access
+host    = ["127.0.0.1"]   # Array format to allow multiple host bindings, use ["0.0.0.0"] for IPv4 Docker or remote access. Can also be set to listen on IPv6 e.g. ["0.0.0.0","::"] to listen on all IPv4 and IPv6 interfaces
 port    = 8888
 workers = 4             # Default: 4
 path    = ""            # Public reverse-proxy path prefix, e.g. "/mediaflow/prefix"
@@ -150,6 +150,9 @@ audio_bitrate = 192000
 # Generic HTTP forward proxy (/proxy/forward)
 # ===========================================================================
 [forward]
+# Auto-detected at startup when empty (via api.ipify.org / checkip.amazonaws.com).
+public_ip = ""
+
 # Allowlist of hostnames. Empty = allow any host (default).
 allowed_hosts = []
 
@@ -166,8 +169,6 @@ max_response_body_bytes = 10485760
 response_body_timeout_secs = 30
 
 # MediaFlow's public IP. Substituted for {mediaflow_ip} in forwarded requests.
-# Auto-detected at startup when empty (via api.ipify.org / checkip.amazonaws.com).
-public_ip = ""
 ```
 
 ---
