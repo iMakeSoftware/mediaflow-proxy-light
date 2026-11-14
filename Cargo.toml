@@ -187,7 +187,7 @@ rust-embed = { version = "8", optional = true }
 mime_guess = { version = "2", optional = true }
 
 # Redis — distributed cache & rate-limiting
-deadpool-redis = { version = "0.18", features = ["rt_tokio_1"], optional = true }
+deadpool-redis = { version = "0.23", features = ["rt_tokio_1"], optional = true }
 redis = { version = "0.27", features = ["tokio-comp", "connection-manager"], optional = true }
 
 # Telegram MTProto
