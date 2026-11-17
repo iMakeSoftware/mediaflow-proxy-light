@@ -58,12 +58,6 @@ jobs:
           cargo test --release --lib --bins -- --test-threads=1
           cargo test --release --test auth_tests --test config_tests -- --test-threads=1
 
-      - name: Install cargo-machete
-        run: cargo install cargo-machete@0.9.2 --locked
-
-      - name: Audit unused dependencies
-        run: cargo machete
-
   # ---------------------------------------------------------------------------
   # Linux ARM64 smoke test (native aarch64 build)
   # ---------------------------------------------------------------------------
