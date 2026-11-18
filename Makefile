@@ -7,7 +7,7 @@ CONTRIBUTORS ?= $(shell git log --pretty=format:'%an' $(VERSION_OLD)..$(VERSION_
 GITHUB_RELEASE_BODY_FILE ?=
 
 # Gemini API settings
-GEMINI_MODEL ?= gemini-3-flash-preview
+GEMINI_MODEL ?= gemini-3.6-flash
 MAX_TOKENS ?= 8000
 
 .PHONY: generate-notes prompt all
@@ -57,7 +57,7 @@ ifndef GEMINI_API_KEY
 	@echo "Error: GEMINI_API_KEY is not set"
 	@exit 1
 endif
-	@PROMPT_CONTENT=$$(make prompt VERSION_OLD=$(VERSION_OLD) VERSION_NEW=$(VERSION_NEW) GITHUB_RELEASE_BODY_FILE=$(GITHUB_RELEASE_BODY_FILE) | jq -sRr @json); \
+	@PROMPT_CONTENT=$$($(MAKE) -s prompt | jq -sRr @json); \
 	if [ -z "$$PROMPT_CONTENT" ]; then \
 	    echo "Failed to generate release notes using Gemini AI, prompt content is empty"; \
 	    exit 1; \
