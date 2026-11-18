@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
             artifact_name: mediaflow-proxy-light
             asset_name: mediaflow-proxy-light-linux-x86_64
@@ -126,18 +126,27 @@ jobs:
   build-android:
     name: Android · ${{ matrix.abi }}
     runs-on: ubuntu-24.04
+    
     strategy:
       fail-fast: false
       matrix:
         include:
           - abi: arm64-v8a
             target: aarch64-linux-android
+            bindgen_var: BINDGEN_EXTRA_CLANG_ARGS_aarch64_linux_android
+            clang_target: aarch64-linux-android21
           - abi: armeabi-v7a
             target: armv7-linux-androideabi
+            bindgen_var: BINDGEN_EXTRA_CLANG_ARGS_armv7_linux_androideabi
+            clang_target: armv7a-linux-androideabi21
           - abi: x86_64
             target: x86_64-linux-android
+            bindgen_var: BINDGEN_EXTRA_CLANG_ARGS_x86_64_linux_android
+            clang_target: x86_64-linux-android21
           - abi: x86
             target: i686-linux-android
+            bindgen_var: BINDGEN_EXTRA_CLANG_ARGS_i686_linux_android
+            clang_target: i686-linux-android21
     steps:
       - uses: actions/checkout@v7
 
@@ -156,11 +165,9 @@ jobs:
       - name: Build for ${{ matrix.abi }}
         env:
           ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
-          # Build only this one ABI to keep job parallelism from the matrix.
           ABIS: ${{ matrix.abi }}
-          # Skip the auto-copy-into-sibling-Android-project step — no sibling
-          # checkout exists on the runner.
           ANDROID_APP_DIR: ""
+          ${{ matrix.bindgen_var }}: "--target=${{ matrix.clang_target }}"
         run: |
           chmod +x tools/build-android.sh
           ./tools/build-android.sh
