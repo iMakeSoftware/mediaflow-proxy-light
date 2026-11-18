@@ -105,7 +105,7 @@ pub unsafe extern "C" fn mediaflow_server_create(
     let cfg = &*cfg;
 
     let host = if cfg.host.is_null() {
-        "127.0.0.1".to_string()
+        vec!["127.0.0.1".to_string()]
     } else {
         match CStr::from_ptr(cfg.host).to_str() {
             Ok(s) => s.to_string(),
@@ -152,7 +152,7 @@ pub unsafe extern "C" fn mediaflow_server_start(srv: *mut MediaflowServer) -> Me
         return MediaflowStatus::ErrAlreadyRunning;
     }
 
-    let host = server.host.clone();
+    let host = vec![server.host.clone()];
     let port = server.port;
     let api_password = server.api_password.clone();
 
@@ -189,7 +189,7 @@ pub unsafe extern "C" fn mediaflow_server_start(srv: *mut MediaflowServer) -> Me
                 }
             };
 
-            cfg.server.host = host.clone();
+            cfg.server.host = vec![host.clone()];
             cfg.server.port = port;
             if !api_password.is_empty() {
                 cfg.auth.api_password = api_password;
