@@ -125,16 +125,7 @@ reqwest = { version = "0.12.28", default-features = false, features = ["stream",
 # Browser TLS/JA3 impersonation — used by extractors that hit Cloudflare-protected
 # hosts (e.g. DoodStream → playmogo.com). rquest is a reqwest fork with Chrome
 # fingerprint spoofing, equivalent to Python's curl_cffi with impersonate="chrome".
-wreq = { version = "0.16", default-features = false, features = [
-    "cookies",
-    "gzip",
-    "brotli",
-    "zstd",
-    "deflate",
-    "json",
-    "socks",
-    "webpki-roots",
-] }
+wreq = { version = "0.16", default-features = false, features = ["cookies", "gzip", "brotli", "zstd", "deflate", "json", "socks", "webpki-roots", "tokio-rt", "query", "form", "multipart", "charset", "stream", "ws", "hickory-dns", "system-proxy", "tracing", "parking_lot"] }
 wreq-util = "0.2"
 
 # Crypto — AES-CBC for proxy-URL encryption, AES-CTR for CENC DRM, AES-GCM for F16Px
