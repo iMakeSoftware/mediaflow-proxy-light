@@ -125,7 +125,7 @@ jobs:
   # ---------------------------------------------------------------------------
   build-android:
     name: Android · ${{ matrix.abi }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -151,7 +151,7 @@ jobs:
         id: ndk
         uses: nttld/setup-ndk@v1
         with:
-          ndk-version: r26d
+          ndk-version: r30
 
       - name: Build for ${{ matrix.abi }}
         env:
@@ -189,7 +189,7 @@ jobs:
   # ---------------------------------------------------------------------------
   build-docker:
     name: Docker multi-arch image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build-binaries
     permissions:
       contents: read
@@ -248,7 +248,7 @@ jobs:
   # ---------------------------------------------------------------------------
   generate_release_notes:
     name: Generate release notes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
@@ -256,10 +256,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-
-      - name: Install jq
-        run: sudo apt-get install -y jq
-
+          
       - name: Persist GitHub-generated release body
         run: |
           cat << 'EOF' > github_generated_release_body.md
@@ -279,13 +276,16 @@ jobs:
           echo "PREVIOUS_VERSION=${PREVIOUS_VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Generate Release Notes
+        env:
+         VERSION_OLD: ${{ steps.extract_versions.outputs.PREVIOUS_VERSION }}
+         VERSION_NEW: ${{ github.ref_name }}
+         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+         GITHUB_RELEASE_BODY_FILE: github_generated_release_body.md
         run: |
-          make generate-notes \
-            VERSION_OLD=${{ steps.extract_versions.outputs.PREVIOUS_VERSION }} \
-            VERSION_NEW=${{ github.ref_name }} \
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
-            GITHUB_RELEASE_BODY_FILE=github_generated_release_body.md \
-            > release_notes.md
+          if ! make generate-notes > release_notes.md; then
+            cat release_notes.md
+            exit 1
+          fi
 
       - name: Update Release Notes
         uses: softprops/action-gh-release@v3
