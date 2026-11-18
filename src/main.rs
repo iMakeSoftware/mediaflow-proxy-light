@@ -3,6 +3,7 @@ use actix_web::middleware::Logger;
 use actix_web::{web, App, HttpServer};
 use socket2::{Domain, Protocol, Socket, Type};
 use std::sync::Arc;
+use tokio::net::lookup_host;
 use tracing_subscriber::{fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt};
 
 mod auth;
@@ -638,27 +639,42 @@ async fn main() -> std::io::Result<()> {
             }))
     })
     .workers(config.server.workers);
+    // Resolve and bind
     for addr_str in &bind_addrs {
-        let socket_addr: std::net::SocketAddr = addr_str.parse().map_err(|e| {
-            std::io::Error::new(
+        // Async DNS resolution
+        let resolved_addrs: Vec<std::net::SocketAddr> = lookup_host(addr_str)
+            .await
+            .map_err(|e| {
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    format!("Invalid host or port '{}': {}", addr_str, e),
+                )
+            })?
+            .collect();
+
+        if resolved_addrs.is_empty() {
+            return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
-                format!("Invalid bind address '{}': {}", addr_str, e),
-            )
-        })?;
-        let domain = if socket_addr.is_ipv6() {
-            Domain::IPV6
-        } else {
-            Domain::IPV4
-        };
-        let socket = Socket::new(domain, Type::STREAM, Some(Protocol::TCP))?;
-        socket.set_reuse_address(true)?;
-        if socket_addr.is_ipv6() {
-            socket.set_only_v6(true)?;
+                format!("No addresses resolved for '{}'", addr_str),
+            ));
         }
-        socket.bind(&socket_addr.into())?;
-        socket.listen(1024)?;
-        let listener: std::net::TcpListener = socket.into();
-        http_server = http_server.listen(listener)?;
+        // Bind to all resolved addresses
+        for socket_addr in resolved_addrs {
+            let domain = if socket_addr.is_ipv6() {
+                Domain::IPV6
+            } else {
+                Domain::IPV4
+            };
+            let socket = Socket::new(domain, Type::STREAM, Some(Protocol::TCP))?;
+            socket.set_reuse_address(true)?;
+            if socket_addr.is_ipv6() {
+                socket.set_only_v6(true)?;
+            }
+            socket.bind(&socket_addr.into())?;
+            socket.listen(1024)?;
+            let listener: std::net::TcpListener = socket.into();
+            http_server = http_server.listen(listener)?;
+        }
     }
     http_server.run().await
 }
