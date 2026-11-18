@@ -71,7 +71,7 @@ impl Extractor for UqloadExtractor {
             });
         }
 
-        let final_url = resp.url().to_string();
+        let final_url = resp.uri().to_string();
         let html = resp
             .text()
             .await

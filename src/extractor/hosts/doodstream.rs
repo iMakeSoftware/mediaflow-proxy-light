@@ -74,7 +74,7 @@ impl DoodStreamExtractor {
             });
         }
 
-        let final_url = resp.url().to_string();
+        let final_url = resp.uri().to_string();
         let text = resp
             .text()
             .await
