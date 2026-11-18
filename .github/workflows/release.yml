@@ -133,20 +133,12 @@ jobs:
         include:
           - abi: arm64-v8a
             target: aarch64-linux-android
-            bindgen_var: BINDGEN_EXTRA_CLANG_ARGS_aarch64_linux_android
-            clang_target: aarch64-linux-android21
           - abi: armeabi-v7a
             target: armv7-linux-androideabi
-            bindgen_var: BINDGEN_EXTRA_CLANG_ARGS_armv7_linux_androideabi
-            clang_target: armv7a-linux-androideabi21
           - abi: x86_64
             target: x86_64-linux-android
-            bindgen_var: BINDGEN_EXTRA_CLANG_ARGS_x86_64_linux_android
-            clang_target: x86_64-linux-android21
           - abi: x86
             target: i686-linux-android
-            bindgen_var: BINDGEN_EXTRA_CLANG_ARGS_i686_linux_android
-            clang_target: i686-linux-android21
     steps:
       - uses: actions/checkout@v7
 
@@ -158,16 +150,15 @@ jobs:
 
       - name: Set up Android NDK
         id: ndk
-        uses: nttld/setup-ndk@v1
+        uses: nttld/setup-ndk@v1.6.0
         with:
-          ndk-version: r30
+          ndk-version: r27d
 
       - name: Build for ${{ matrix.abi }}
         env:
           ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
           ABIS: ${{ matrix.abi }}
           ANDROID_APP_DIR: ""
-          ${{ matrix.bindgen_var }}: "--target=${{ matrix.clang_target }}"
         run: |
           chmod +x tools/build-android.sh
           ./tools/build-android.sh
