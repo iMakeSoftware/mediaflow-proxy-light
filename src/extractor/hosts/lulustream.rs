@@ -1,8 +1,8 @@
 use async_trait::async_trait;
 use regex::Regex;
-use rquest::header::{HeaderMap, HeaderName, HeaderValue};
 use std::collections::HashMap;
 use std::sync::OnceLock;
+use wreq::header::{HeaderMap, HeaderName, HeaderValue};
 
 use crate::extractor::base::{
     build_chrome_client, BaseExtractor, ExtraParams, Extractor, ExtractorError, ExtractorResult,
@@ -15,7 +15,7 @@ fn sources_re() -> &'static Regex {
 
 pub struct LuluStreamExtractor {
     pub base: BaseExtractor,
-    chrome_client: rquest::Client,
+    chrome_client: wreq::Client,
 }
 
 impl LuluStreamExtractor {

@@ -1,10 +1,10 @@
 use async_trait::async_trait;
 use regex::Regex;
-use rquest::header::{HeaderMap, HeaderName, HeaderValue};
 use std::collections::HashMap;
 use std::sync::OnceLock;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::time::Duration;
+use wreq::header::{HeaderMap, HeaderName, HeaderValue};
 
 use crate::extractor::base::{
     build_chrome_client, BaseExtractor, ExtraParams, Extractor, ExtractorError, ExtractorResult,
@@ -30,8 +30,8 @@ fn js_redirect_re() -> &'static Regex {
 
 pub struct DoodStreamExtractor {
     pub base: BaseExtractor,
-    /// rquest client with Chrome TLS/HTTP2 fingerprint — bypasses Cloudflare bot detection.
-    chrome_client: rquest::Client,
+    /// wreq client with Chrome TLS/HTTP2 fingerprint — bypasses Cloudflare bot detection.
+    chrome_client: wreq::Client,
     /// Optional Byparr service URL for Cloudflare/Turnstile bypass.
     byparr_url: Option<String>,
     byparr_timeout: u64,

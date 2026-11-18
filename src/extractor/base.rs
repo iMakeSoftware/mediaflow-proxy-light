@@ -2,12 +2,12 @@
 
 use dashmap::DashMap;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use rquest_util::Emulation;
 use serde_json;
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::OnceLock;
 use tokio::time::Duration;
+use wreq_util::Emulation;
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -128,12 +128,12 @@ fn build_reqwest_client(proxy_url: Option<&str>) -> reqwest::Client {
 }
 
 // ---------------------------------------------------------------------------
-// Global shared Chrome-impersonating rquest client pool
+// Global shared Chrome-impersonating wreq client pool
 // ---------------------------------------------------------------------------
 
-fn get_shared_chrome_client(proxy_url: Option<&str>) -> rquest::Client {
-    static DEFAULT: OnceLock<rquest::Client> = OnceLock::new();
-    static PROXIED: OnceLock<DashMap<String, rquest::Client>> = OnceLock::new();
+fn get_shared_chrome_client(proxy_url: Option<&str>) -> wreq::Client {
+    static DEFAULT: OnceLock<wreq::Client> = OnceLock::new();
+    static PROXIED: OnceLock<DashMap<String, wreq::Client>> = OnceLock::new();
 
     match proxy_url {
         None => DEFAULT
@@ -151,14 +151,14 @@ fn get_shared_chrome_client(proxy_url: Option<&str>) -> rquest::Client {
     }
 }
 
-fn build_chrome_client_inner(proxy_url: Option<&str>) -> rquest::Client {
-    let mut builder = rquest::Client::builder()
-        .emulation(Emulation::Chrome133)
+fn build_chrome_client_inner(proxy_url: Option<&str>) -> wreq::Client {
+    let mut builder = wreq::Client::builder()
+        .emulation(Emulation::Chrome147)
         .timeout(Duration::from_secs(30))
-        .redirect(rquest::redirect::Policy::limited(5));
+        .redirect(wreq::redirect::Policy::limited(5));
 
     if let Some(url) = proxy_url {
-        match rquest::Proxy::all(url) {
+        match wreq::Proxy::all(url) {
             Ok(proxy) => {
                 builder = builder.proxy(proxy);
             }
@@ -171,11 +171,11 @@ fn build_chrome_client_inner(proxy_url: Option<&str>) -> rquest::Client {
     builder.build().unwrap_or_default()
 }
 
-/// Build an `rquest::Client` that impersonates Chrome 133 (TLS + HTTP/2 fingerprint).
+/// Build an `wreq::Client` that impersonates Chrome 147 (TLS + HTTP/2 fingerprint).
 ///
 /// Returns a globally-cached client so the warm connection pool is reused
 /// across all extraction requests with the same proxy configuration.
-pub fn build_chrome_client(proxy_url: Option<&str>) -> rquest::Client {
+pub fn build_chrome_client(proxy_url: Option<&str>) -> wreq::Client {
     get_shared_chrome_client(proxy_url)
 }
 

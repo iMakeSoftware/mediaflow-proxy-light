@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use regex::Regex;
-use rquest::header::{HeaderMap, HeaderName, HeaderValue};
 use scraper::{Html, Selector};
 use std::collections::HashMap;
 use std::sync::OnceLock;
+use wreq::header::{HeaderMap, HeaderName, HeaderValue};
 
 use crate::extractor::base::{
     build_chrome_client, BaseExtractor, ExtraParams, Extractor, ExtractorError, ExtractorResult,
@@ -17,7 +17,7 @@ fn file_re() -> &'static Regex {
 
 pub struct SupervideoExtractor {
     pub base: BaseExtractor,
-    chrome_client: rquest::Client,
+    chrome_client: wreq::Client,
 }
 
 impl SupervideoExtractor {

@@ -85,7 +85,7 @@ jobs:
           export AR_aarch64_linux_android="$TOOLCHAIN/bin/llvm-ar"
           export RANLIB_aarch64_linux_android="$TOOLCHAIN/bin/llvm-ranlib"
           # tls-rustls instead of tls-native/vendored-openssl: avoids linker
-          # conflicts between OpenSSL and BoringSSL (rquest's boring-sys2).
+          # conflicts between OpenSSL and BoringSSL (wreq's boring-sys2).
           cargo build \
             --release \
             --target aarch64-linux-android \

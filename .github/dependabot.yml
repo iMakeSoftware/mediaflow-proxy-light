@@ -31,7 +31,7 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
-      - dependency-name: "rquest"
+      - dependency-name: "wreq"
 
   # ---------------------------------------------------------------------------
   # GitHub Actions (Keep your CI/CD pipeline secure and up-to-date)
