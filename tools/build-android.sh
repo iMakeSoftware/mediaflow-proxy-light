@@ -114,6 +114,7 @@ for entry in "${TARGETS[@]}"; do
     # Makefile hard-codes that name.  Point it at `llvm-ranlib` instead.
     env \
         "CC_${RUST_TARGET}=$NDK_BIN/$LINKER" \
+        "CXX_${RUST_TARGET}=$NDK_BIN/${LINKER}++" \
         "AR_${RUST_TARGET}=$NDK_BIN/llvm-ar" \
         "RANLIB_${RUST_TARGET}=$NDK_BIN/llvm-ranlib" \
         cargo build \
