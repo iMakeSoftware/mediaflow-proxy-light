@@ -19,7 +19,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
 
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use futures::{Stream, StreamExt};
 use reqwest::header::HeaderMap;
 use urlencoding::encode as url_encode;
@@ -432,10 +432,10 @@ fn playback_to_getstream(
 fn extract_query_param<'a>(url: &'a str, key: &str) -> Option<&'a str> {
     let qs = url.split_once('?')?.1;
     for part in qs.split('&') {
-        if let Some(eq) = part.find('=') {
-            if &part[..eq] == key {
-                return Some(&part[eq + 1..]);
-            }
+        if let Some(eq) = part.find('=')
+            && &part[..eq] == key
+        {
+            return Some(&part[eq + 1..]);
         }
     }
     None

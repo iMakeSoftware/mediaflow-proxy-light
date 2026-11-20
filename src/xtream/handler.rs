@@ -6,10 +6,10 @@
 //! Registered in `main.rs` under the `xtream` feature flag.
 
 use std::collections::HashMap;
-use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use std::str::FromStr;
 use urlencoding::encode as url_encode;
@@ -33,13 +33,13 @@ fn pass_through_headers(req: &HttpRequest) -> HeaderMap {
     const PASS: &[&str] = &["range", "if-range", "if-modified-since", "if-none-match"];
     let mut headers = HeaderMap::new();
     for name in PASS {
-        if let Some(v) = req.headers().get(*name) {
-            if let (Ok(n), Ok(val)) = (
+        if let Some(v) = req.headers().get(*name)
+            && let (Ok(n), Ok(val)) = (
                 HeaderName::from_str(name),
                 HeaderValue::try_from(v.as_bytes()),
-            ) {
-                headers.insert(n, val);
-            }
+            )
+        {
+            headers.insert(n, val);
         }
     }
     headers
@@ -471,10 +471,10 @@ async fn proxy_stream_response(
     for (name, value) in &resp_headers {
         // Forward content-type and content-length only.
         let n = name.as_str();
-        if n == "content-type" || n == "content-length" || n == "accept-ranges" {
-            if let Ok(v) = actix_web::http::header::HeaderValue::from_bytes(value.as_bytes()) {
-                resp.insert_header((n, v));
-            }
+        if (n == "content-type" || n == "content-length" || n == "accept-ranges")
+            && let Ok(v) = actix_web::http::header::HeaderValue::from_bytes(value.as_bytes())
+        {
+            resp.insert_header((n, v));
         }
     }
 

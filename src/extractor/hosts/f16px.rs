@@ -2,7 +2,7 @@
 //!
 //! Reference: https://github.com/Gujal00/ResolveURL (plugins/f16px.py)
 use async_trait::async_trait;
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
+use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use hmac::{Hmac, Mac};
 use rand::RngCore;
 use regex::Regex;
@@ -107,7 +107,7 @@ fn make_fingerprint() -> serde_json::Value {
 }
 
 fn aes_gcm_decrypt(key: &[u8], iv: &[u8], payload: &[u8]) -> Option<Vec<u8>> {
-    use aes_gcm::{aead::Aead, Aes128Gcm, Aes256Gcm, KeyInit, Nonce};
+    use aes_gcm::{Aes128Gcm, Aes256Gcm, KeyInit, Nonce, aead::Aead};
 
     if iv.len() != 12 || payload.len() < 16 {
         return None;
@@ -142,14 +142,12 @@ fn decrypt_playback(pb: &serde_json::Value) -> Option<Vec<serde_json::Value>> {
     let key_bytes = join_key_parts(&key_parts).ok()?;
     let payload_bytes = b64url_decode(payload_b64).ok()?;
 
-    if let Some(plain) = aes_gcm_decrypt(&key_bytes, &iv_bytes, &payload_bytes) {
-        if let Ok(json) = serde_json::from_slice::<serde_json::Value>(&plain) {
-            if let Some(sources) = json.get("sources").and_then(|s| s.as_array()) {
-                if !sources.is_empty() {
-                    return Some(sources.clone());
-                }
-            }
-        }
+    if let Some(plain) = aes_gcm_decrypt(&key_bytes, &iv_bytes, &payload_bytes)
+        && let Ok(json) = serde_json::from_slice::<serde_json::Value>(&plain)
+        && let Some(sources) = json.get("sources").and_then(|s| s.as_array())
+        && !sources.is_empty()
+    {
+        return Some(sources.clone());
     }
 
     // Fallback: payload2 + decrypt_keys
@@ -161,18 +159,14 @@ fn decrypt_playback(pb: &serde_json::Value) -> Option<Vec<serde_json::Value>> {
     let payload2_bytes = b64url_decode(payload2).ok()?;
 
     for key_b64 in decrypt_keys.values() {
-        if let Some(key_str) = key_b64.as_str() {
-            if let Ok(key2) = b64url_decode(key_str) {
-                if let Some(plain) = aes_gcm_decrypt(&key2, &iv2_bytes, &payload2_bytes) {
-                    if let Ok(json) = serde_json::from_slice::<serde_json::Value>(&plain) {
-                        if let Some(sources) = json.get("sources").and_then(|s| s.as_array()) {
-                            if !sources.is_empty() {
-                                return Some(sources.clone());
-                            }
-                        }
-                    }
-                }
-            }
+        if let Some(key_str) = key_b64.as_str()
+            && let Ok(key2) = b64url_decode(key_str)
+            && let Some(plain) = aes_gcm_decrypt(&key2, &iv2_bytes, &payload2_bytes)
+            && let Ok(json) = serde_json::from_slice::<serde_json::Value>(&plain)
+            && let Some(sources) = json.get("sources").and_then(|s| s.as_array())
+            && !sources.is_empty()
+        {
+            return Some(sources.clone());
         }
     }
 
@@ -219,16 +213,16 @@ impl Extractor for F16PxExtractor {
             .map_err(|e| ExtractorError::extract(format!("F16Px: JSON parse error: {e}")))?;
 
         // Case 1: plain sources — pick highest quality.
-        if let Some(sources) = data["sources"].as_array() {
-            if !sources.is_empty() {
-                let best = pick_best(sources)
-                    .ok_or_else(|| ExtractorError::extract("F16Px: empty source URL"))?;
-                return Ok(ExtractorResult {
-                    destination_url: best,
-                    request_headers: extra_headers,
-                    mediaflow_endpoint: "hls_manifest_proxy",
-                });
-            }
+        if let Some(sources) = data["sources"].as_array()
+            && !sources.is_empty()
+        {
+            let best = pick_best(sources)
+                .ok_or_else(|| ExtractorError::extract("F16Px: empty source URL"))?;
+            return Ok(ExtractorResult {
+                destination_url: best,
+                request_headers: extra_headers,
+                mediaflow_endpoint: "hls_manifest_proxy",
+            });
         }
 
         // Case 2: encrypted playback.

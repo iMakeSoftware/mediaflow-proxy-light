@@ -859,7 +859,7 @@ impl Mp4Decrypter {
                     swapped[0..4].reverse(); // bytes 0-3
                     swapped[4..6].reverse(); // bytes 4-5
                     swapped[6..8].reverse(); // bytes 6-7
-                                             // bytes 8-15 unchanged
+                    // bytes 8-15 unchanged
                     if let Some(k) = self.key_map.get(swapped.as_slice()) {
                         return Some(k);
                     }
@@ -1144,7 +1144,7 @@ fn decrypt_cbcs_pattern(
 
 /// Decrypt complete 16-byte blocks with AES-CBC (leave trailing partial block unchanged).
 fn aes_cbc_decrypt_full_blocks(key: &[u8], iv: &[u8; 16], data: &[u8]) -> Vec<u8> {
-    use aes::cipher::{block_padding::NoPadding, BlockDecryptMut, KeyIvInit};
+    use aes::cipher::{BlockDecryptMut, KeyIvInit, block_padding::NoPadding};
 
     let complete = (data.len() / 16) * 16;
     if complete == 0 {
@@ -1155,19 +1155,19 @@ fn aes_cbc_decrypt_full_blocks(key: &[u8], iv: &[u8; 16], data: &[u8]) -> Vec<u8
     match key.len() {
         16 => {
             type Aes128CbcDec = cbc::Decryptor<aes::Aes128>;
-            if let Ok(cipher) = Aes128CbcDec::new_from_slices(key, iv) {
-                if let Ok(out) = cipher.decrypt_padded_mut::<NoPadding>(&mut result[..complete]) {
-                    // out is a slice into result, already decrypted in-place
-                    let _ = out;
-                }
+            if let Ok(cipher) = Aes128CbcDec::new_from_slices(key, iv)
+                && let Ok(out) = cipher.decrypt_padded_mut::<NoPadding>(&mut result[..complete])
+            {
+                // out is a slice into result, already decrypted in-place
+                let _ = out;
             }
         }
         32 => {
             type Aes256CbcDec = cbc::Decryptor<aes::Aes256>;
-            if let Ok(cipher) = Aes256CbcDec::new_from_slices(key, iv) {
-                if let Ok(out) = cipher.decrypt_padded_mut::<NoPadding>(&mut result[..complete]) {
-                    let _ = out;
-                }
+            if let Ok(cipher) = Aes256CbcDec::new_from_slices(key, iv)
+                && let Ok(out) = cipher.decrypt_padded_mut::<NoPadding>(&mut result[..complete])
+            {
+                let _ = out;
             }
         }
         _ => {

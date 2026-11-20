@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::OnceLock;

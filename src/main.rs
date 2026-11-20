@@ -1,6 +1,6 @@
 use actix_cors::Cors;
 use actix_web::middleware::Logger;
-use actix_web::{web, App, HttpServer};
+use actix_web::{App, HttpServer, web};
 use socket2::{Domain, Protocol, Socket, Type};
 use std::sync::Arc;
 use tokio::net::lookup_host;
@@ -102,14 +102,14 @@ async fn main() -> std::io::Result<()> {
             .ok();
         if let Some(client) = ip_detect_client {
             'detect: for url in &["https://api.ipify.org", "https://checkip.amazonaws.com"] {
-                if let Ok(resp) = client.get(*url).send().await {
-                    if let Ok(text) = resp.text().await {
-                        let ip = text.trim().to_string();
-                        if !ip.is_empty() {
-                            tracing::info!("Detected public IP: {ip}");
-                            forward_cfg.public_ip = Some(ip);
-                            break 'detect;
-                        }
+                if let Ok(resp) = client.get(*url).send().await
+                    && let Ok(text) = resp.text().await
+                {
+                    let ip = text.trim().to_string();
+                    if !ip.is_empty() {
+                        tracing::info!("Detected public IP: {ip}");
+                        forward_cfg.public_ip = Some(ip);
+                        break 'detect;
                     }
                 }
             }

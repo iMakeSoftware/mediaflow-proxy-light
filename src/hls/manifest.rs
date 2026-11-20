@@ -260,12 +260,11 @@ impl ManifestProcessor {
             // unknown_tags, where write_to emits it verbatim.  Rewrite any URI=
             // found there so those rendition sub-playlists go through the proxy.
             for unknown in &mut pl.unknown_tags {
-                if unknown.tag == "X-MEDIA" {
-                    if let Some(ref rest) = unknown.rest.clone() {
-                        if rest.contains("URI=\"") {
-                            unknown.rest = Some(self.rewrite_tag_rest_uri(rest, base_url, true));
-                        }
-                    }
+                if unknown.tag == "X-MEDIA"
+                    && let Some(ref rest) = unknown.rest.clone()
+                    && rest.contains("URI=\"")
+                {
+                    unknown.rest = Some(self.rewrite_tag_rest_uri(rest, base_url, true));
                 }
             }
         }
@@ -288,27 +287,27 @@ impl ManifestProcessor {
                 .unwrap_or(false);
 
         // Inject EXT-X-START if requested for live streams
-        if let Some(offset) = self.opts.start_offset {
-            if self.opts.force_start_offset || !is_vod {
-                // EXT-X-START is a field on MediaPlaylist in m3u8-rs >= 6
-                // We inject it via the unknown_tags mechanism if needed.
-                // For now, inject as a raw tag — handled in line fallback.
-                let _ = offset; // used below via write_to
-            }
+        if let Some(offset) = self.opts.start_offset
+            && (self.opts.force_start_offset || !is_vod)
+        {
+            // EXT-X-START is a field on MediaPlaylist in m3u8-rs >= 6
+            // We inject it via the unknown_tags mechanism if needed.
+            // For now, inject as a raw tag — handled in line fallback.
+            let _ = offset; // used below via write_to
         }
 
         // Rewrite keys and map (init segment) URIs
         for seg in &mut pl.segments {
             // Key URI
-            if let Some(ref mut key) = seg.key {
-                if let Some(ref uri) = key.uri.clone() {
-                    let resolved = resolve_url(base_url, uri);
-                    key.uri = Some(if self.opts.no_proxy {
-                        resolved
-                    } else {
-                        proxy_key_url(&self.proxy_base, &resolved, &self.params)
-                    });
-                }
+            if let Some(ref mut key) = seg.key
+                && let Some(ref uri) = key.uri.clone()
+            {
+                let resolved = resolve_url(base_url, uri);
+                key.uri = Some(if self.opts.no_proxy {
+                    resolved
+                } else {
+                    proxy_key_url(&self.proxy_base, &resolved, &self.params)
+                });
             }
 
             // Init segment (EXT-X-MAP)
@@ -331,14 +330,14 @@ impl ManifestProcessor {
             // and writes them back verbatim — leaving audio sub-playlist URIs
             // unproxied.  We fix them up here.
             for unknown in &mut seg.unknown_tags {
-                if let Some(ref rest) = unknown.rest.clone() {
-                    if rest.contains("URI=\"") {
-                        // #EXT-X-MEDIA / #EXT-X-I-FRAME-STREAM-INF carry sub-playlist URIs;
-                        // everything else (e.g. custom DRM tags) is treated as a key.
-                        let is_playlist =
-                            unknown.tag == "X-MEDIA" || unknown.tag == "X-I-FRAME-STREAM-INF";
-                        unknown.rest = Some(self.rewrite_tag_rest_uri(rest, base_url, is_playlist));
-                    }
+                if let Some(ref rest) = unknown.rest.clone()
+                    && rest.contains("URI=\"")
+                {
+                    // #EXT-X-MEDIA / #EXT-X-I-FRAME-STREAM-INF carry sub-playlist URIs;
+                    // everything else (e.g. custom DRM tags) is treated as a key.
+                    let is_playlist =
+                        unknown.tag == "X-MEDIA" || unknown.tag == "X-I-FRAME-STREAM-INF";
+                    unknown.rest = Some(self.rewrite_tag_rest_uri(rest, base_url, is_playlist));
                 }
             }
         }
@@ -351,12 +350,11 @@ impl ManifestProcessor {
         // and subtitle rendition sub-playlists are always proxied through the
         // manifest endpoint regardless of where the tag sits in the file.
         for unknown in &mut pl.unknown_tags {
-            if let Some(ref rest) = unknown.rest.clone() {
-                if rest.contains("URI=\"") {
-                    let is_playlist =
-                        unknown.tag == "X-MEDIA" || unknown.tag == "X-I-FRAME-STREAM-INF";
-                    unknown.rest = Some(self.rewrite_tag_rest_uri(rest, base_url, is_playlist));
-                }
+            if let Some(ref rest) = unknown.rest.clone()
+                && rest.contains("URI=\"")
+            {
+                let is_playlist = unknown.tag == "X-MEDIA" || unknown.tag == "X-I-FRAME-STREAM-INF";
+                unknown.rest = Some(self.rewrite_tag_rest_uri(rest, base_url, is_playlist));
             }
         }
 
@@ -372,10 +370,10 @@ impl ManifestProcessor {
         let result = String::from_utf8_lossy(&out).into_owned();
 
         // Inject EXT-X-START after #EXTM3U if needed (m3u8-rs doesn't expose this field directly)
-        if let Some(offset) = self.opts.start_offset {
-            if self.opts.force_start_offset || !is_vod {
-                return inject_ext_x_start(&result, offset);
-            }
+        if let Some(offset) = self.opts.start_offset
+            && (self.opts.force_start_offset || !is_vod)
+        {
+            return inject_ext_x_start(&result, offset);
         }
 
         result
@@ -496,14 +494,14 @@ impl ManifestProcessor {
             if line.trim() == "#EXTM3U" {
                 out.push_str(line);
                 out.push('\n');
-                if let Some(offset) = self.opts.start_offset {
-                    if !start_offset_injected {
-                        out.push_str(&format!(
-                            "#EXT-X-START:TIME-OFFSET={:.1},PRECISE=YES\n",
-                            offset
-                        ));
-                        start_offset_injected = true;
-                    }
+                if let Some(offset) = self.opts.start_offset
+                    && !start_offset_injected
+                {
+                    out.push_str(&format!(
+                        "#EXT-X-START:TIME-OFFSET={:.1},PRECISE=YES\n",
+                        offset
+                    ));
+                    start_offset_injected = true;
                 }
                 continue;
             }
@@ -511,13 +509,13 @@ impl ManifestProcessor {
             // EXTINF line
             if line.starts_with("#EXTINF:") {
                 let duration = parse_extinf_duration(line);
-                if let Some(ref mut f) = skip_filter {
-                    if f.check_and_advance(duration) {
-                        // Will skip this segment
-                        need_discontinuity = true;
-                        pending_extinf = None;
-                        continue;
-                    }
+                if let Some(ref mut f) = skip_filter
+                    && f.check_and_advance(duration)
+                {
+                    // Will skip this segment
+                    need_discontinuity = true;
+                    pending_extinf = None;
+                    continue;
                 }
                 pending_extinf = Some(line.to_string());
                 continue;
@@ -847,11 +845,10 @@ mod tests {
         );
 
         let master = b"#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1\nvariant.m3u8\n";
-        assert!(ManifestProcessor::media_segment_urls(
-            master,
-            "https://cdn.example.com/master.m3u8"
-        )
-        .is_empty());
+        assert!(
+            ManifestProcessor::media_segment_urls(master, "https://cdn.example.com/master.m3u8")
+                .is_empty()
+        );
     }
 
     #[test]
@@ -1085,11 +1082,18 @@ mod tests {
             }
         }
 
-        assert!(token_destinations
-            .contains(&"https://edge.example.com/live/redirected/keys/key.bin".to_string()));
-        assert!(token_destinations
-            .contains(&"https://edge.example.com/live/redirected/init/init.mp4".to_string()));
-        assert!(token_destinations
-            .contains(&"https://edge.example.com/live/redirected/segments/seg001.ts".to_string()));
+        assert!(
+            token_destinations
+                .contains(&"https://edge.example.com/live/redirected/keys/key.bin".to_string())
+        );
+        assert!(
+            token_destinations
+                .contains(&"https://edge.example.com/live/redirected/init/init.mp4".to_string())
+        );
+        assert!(
+            token_destinations.contains(
+                &"https://edge.example.com/live/redirected/segments/seg001.ts".to_string()
+            )
+        );
     }
 }

@@ -1,9 +1,8 @@
 /// Utilities for detecting and handling base64-encoded URLs.
 /// Port of Python `mediaflow_proxy/utils/base64_utils.py`.
 use base64::{
-    alphabet,
+    Engine as _, alphabet,
     engine::{self, general_purpose},
-    Engine as _,
 };
 
 /// Check whether `url` looks like a base64-encoded URL (rather than a plain URL).
@@ -56,18 +55,18 @@ pub fn decode_base64_url(encoded: &str) -> Option<String> {
 /// Encode a URL as base64url (no padding, URL-safe alphabet).
 pub fn encode_url_to_base64(url: &str) -> String {
     // URL-safe alphabet, no padding (strip trailing '=')
-    let encoded = engine::GeneralPurpose::new(&alphabet::URL_SAFE, engine::general_purpose::NO_PAD)
-        .encode(url.as_bytes());
-    encoded
+
+    engine::GeneralPurpose::new(&alphabet::URL_SAFE, engine::general_purpose::NO_PAD)
+        .encode(url.as_bytes())
 }
 
 /// If `url` looks like a base64-encoded URL, decode and return it.
 /// Otherwise return `url` unchanged.
 pub fn process_potential_base64_url(url: &str) -> String {
-    if is_base64_url(url) {
-        if let Some(decoded) = decode_base64_url(url) {
-            return decoded;
-        }
+    if is_base64_url(url)
+        && let Some(decoded) = decode_base64_url(url)
+    {
+        return decoded;
     }
     url.to_string()
 }

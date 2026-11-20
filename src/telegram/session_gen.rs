@@ -21,8 +21,8 @@
 use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
-use actix_web::{web, HttpResponse};
-use base64::{engine::general_purpose, Engine};
+use actix_web::{HttpResponse, web};
+use base64::{Engine, engine::general_purpose};
 use dashmap::DashMap;
 use grammers_client::session::Session;
 use grammers_client::types::{LoginToken, PasswordToken};
@@ -208,7 +208,7 @@ pub async fn session_start_handler(req: web::Json<SessionStartRequest>) -> HttpR
                     let session_string = match export_telethon_string(&client) {
                         Some(s) => s,
                         None => {
-                            return internal_error("Signed in but could not export session string")
+                            return internal_error("Signed in but could not export session string");
                         }
                     };
                     info!("Telegram bot session generated (api_id={})", req.api_id);
@@ -343,7 +343,7 @@ pub async fn session_2fa_handler(req: web::Json<Session2FaRequest>) -> HttpRespo
     let pwd_token = match pending.password_token.take() {
         Some(t) => t,
         None => {
-            return bad_request("No 2FA challenge pending on this session; verify a code first.")
+            return bad_request("No 2FA challenge pending on this session; verify a code first.");
         }
     };
 

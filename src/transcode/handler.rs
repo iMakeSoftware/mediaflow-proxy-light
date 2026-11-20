@@ -9,14 +9,14 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use urlencoding::encode as url_encode;
 
 use crate::{
     config::Config,
     error::{AppError, AppResult},
     proxy::stream::StreamManager,
-    transcode::pipeline::{transcode_url, OutputFormat, TranscodeOptions},
+    transcode::pipeline::{OutputFormat, TranscodeOptions, transcode_url},
     utils::url::public_proxy_base_url,
 };
 

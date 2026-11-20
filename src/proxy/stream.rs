@@ -5,7 +5,7 @@ use reqwest::{Client, Proxy, Response};
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::Semaphore;
-use tokio::time::{timeout, Duration};
+use tokio::time::{Duration, timeout};
 use tracing::error;
 
 use crate::{
@@ -110,10 +110,10 @@ impl StreamManager {
                 }
             }));
 
-        if let Some(default_proxy) = proxy_router.default_proxy() {
-            if let Ok(proxy) = Proxy::all(default_proxy) {
-                builder = builder.proxy(proxy);
-            }
+        if let Some(default_proxy) = proxy_router.default_proxy()
+            && let Ok(proxy) = Proxy::all(default_proxy)
+        {
+            builder = builder.proxy(proxy);
         }
 
         builder.build().expect("Failed to create HTTP client")
@@ -138,20 +138,20 @@ impl StreamManager {
             .no_gzip()
             .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36");
 
-        if route_config.proxy {
-            if let Some(proxy_url) = route_config.proxy_url.as_ref() {
-                match Proxy::all(proxy_url) {
-                    Ok(proxy) => {
-                        tracing::info!("Building route client with proxy {}", proxy_url);
-                        builder = builder.proxy(proxy);
-                    }
-                    Err(e) => {
-                        error!("Failed to create proxy for route: {}", e);
-                        return Err(AppError::Internal(format!(
-                            "Failed to create route proxy client: {}",
-                            e
-                        )));
-                    }
+        if route_config.proxy
+            && let Some(proxy_url) = route_config.proxy_url.as_ref()
+        {
+            match Proxy::all(proxy_url) {
+                Ok(proxy) => {
+                    tracing::info!("Building route client with proxy {}", proxy_url);
+                    builder = builder.proxy(proxy);
+                }
+                Err(e) => {
+                    error!("Failed to create proxy for route: {}", e);
+                    return Err(AppError::Internal(format!(
+                        "Failed to create route proxy client: {}",
+                        e
+                    )));
                 }
             }
         }
@@ -229,12 +229,13 @@ impl StreamManager {
                 route_config.verify_ssl,
             );
 
-            if let Some(cached) = self.route_clients.get(&cache_key) {
-                cached.clone()
-            } else {
-                let new_client = Self::build_route_client(&self.config, &route_config)?;
-                self.route_clients.insert(cache_key, new_client.clone());
-                new_client
+            match self.route_clients.get(&cache_key) {
+                Some(cached) => cached.clone(),
+                _ => {
+                    let new_client = Self::build_route_client(&self.config, &route_config)?;
+                    self.route_clients.insert(cache_key, new_client.clone());
+                    new_client
+                }
             }
         } else {
             self.thread_client()
@@ -287,12 +288,13 @@ impl StreamManager {
                 route_config.proxy_url.as_deref().unwrap_or(""),
                 route_config.verify_ssl,
             );
-            if let Some(cached) = self.route_clients.get(&cache_key) {
-                cached.clone()
-            } else {
-                let new_client = Self::build_route_client(&self.config, &route_config)?;
-                self.route_clients.insert(cache_key, new_client.clone());
-                new_client
+            match self.route_clients.get(&cache_key) {
+                Some(cached) => cached.clone(),
+                _ => {
+                    let new_client = Self::build_route_client(&self.config, &route_config)?;
+                    self.route_clients.insert(cache_key, new_client.clone());
+                    new_client
+                }
             }
         } else {
             self.thread_client()
@@ -367,7 +369,7 @@ impl StreamManager {
     ) -> AppResult<(
         reqwest::StatusCode,
         reqwest::header::HeaderMap,
-        Option<impl Stream<Item = Result<Bytes, AppError>>>,
+        Option<impl Stream<Item = Result<Bytes, AppError>> + use<>>,
     )> {
         // Acquire the per-host slot BEFORE dispatching.  For streaming, the
         // permit will be moved into the body stream closure so it lives until
@@ -420,7 +422,10 @@ impl StreamManager {
     ///
     /// Not async — avoids a state-machine allocation.
     /// Does NOT Box::pin — the caller's ResponseStream::new() handles that.
-    pub fn stream_with_progress<S>(&self, stream: S) -> impl Stream<Item = Result<Bytes, AppError>>
+    pub fn stream_with_progress<S>(
+        &self,
+        stream: S,
+    ) -> impl Stream<Item = Result<Bytes, AppError>> + use<S>
     where
         S: Stream<Item = Result<Bytes, AppError>>,
     {

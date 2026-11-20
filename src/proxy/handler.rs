@@ -1,24 +1,24 @@
 use actix_web::{
+    HttpRequest, HttpResponse,
     body::SizedStream,
     http::StatusCode,
     web::{self, Bytes},
-    HttpRequest, HttpResponse,
 };
-use futures::{stream, StreamExt};
+use futures::{StreamExt, stream};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use std::boxed::Box;
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::str::FromStr;
-use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 use std::time::{SystemTime, UNIX_EPOCH};
 use url::Url;
 
 use serde::Deserialize;
 
 use crate::{
-    auth::{encryption::ProxyData, EncryptionHandler},
+    auth::{EncryptionHandler, encryption::ProxyData},
     config::ForwardConfig,
     error::{AppError, AppResult},
     metrics::AppMetrics,
@@ -110,12 +110,11 @@ async fn handle_proxy_request(
 
     // Add supported headers from upstream response
     for &header_name in SUPPORTED_RESPONSE_HEADERS {
-        if let Some(value) = upstream_headers.get(header_name) {
-            if let Ok(converted_value) =
+        if let Some(value) = upstream_headers.get(header_name)
+            && let Ok(converted_value) =
                 actix_web::http::header::HeaderValue::from_str(value.to_str().unwrap_or_default())
-            {
-                response.insert_header((header_name, converted_value));
-            }
+        {
+            response.insert_header((header_name, converted_value));
         }
     }
 
@@ -187,12 +186,11 @@ fn resolve_stream_destination(req: &HttpRequest, proxy_data: &ProxyData) -> Opti
     }
 
     // Try the {filename:.*} path segment as a base64url-encoded destination URL.
-    if let Some(filename) = req.match_info().get("filename") {
-        if !filename.is_empty() {
-            if let Some(decoded) = decode_base64_url(filename) {
-                return Some(decoded);
-            }
-        }
+    if let Some(filename) = req.match_info().get("filename")
+        && !filename.is_empty()
+        && let Some(decoded) = decode_base64_url(filename)
+    {
+        return Some(decoded);
     }
 
     None
@@ -307,12 +305,12 @@ fn check_forward_destination(url: &str, cfg: &ForwardConfig) -> AppResult<()> {
     }
 
     // Block private/loopback/link-local IPs given as literals
-    if let Ok(addr) = hostname.parse::<IpAddr>() {
-        if addr.is_loopback() || addr.is_multicast() || is_private_ip(&addr) {
-            return Err(AppError::Forbidden(
-                "Forwarding to private/loopback addresses is not allowed".into(),
-            ));
-        }
+    if let Ok(addr) = hostname.parse::<IpAddr>()
+        && (addr.is_loopback() || addr.is_multicast() || is_private_ip(&addr))
+    {
+        return Err(AppError::Forbidden(
+            "Forwarding to private/loopback addresses is not allowed".into(),
+        ));
     }
 
     Ok(())
@@ -409,12 +407,11 @@ pub async fn proxy_forward(
             if BLOCKED_REQUEST_HEADERS.contains(&key_lower.as_str()) {
                 continue;
             }
-            if let Some(value_str) = value.as_str() {
-                if let (Ok(name), Ok(val)) =
+            if let Some(value_str) = value.as_str()
+                && let (Ok(name), Ok(val)) =
                     (HeaderName::from_str(key), HeaderValue::from_str(value_str))
-                {
-                    request_headers.insert(name, val);
-                }
+            {
+                request_headers.insert(name, val);
             }
         }
     }
@@ -788,7 +785,7 @@ pub async fn base64_encode(query: web::Query<Base64Query>) -> HttpResponse {
         Some(u) => u.as_str(),
         None => {
             return HttpResponse::BadRequest()
-                .json(serde_json::json!({"error": "missing `url` query param"}))
+                .json(serde_json::json!({"error": "missing `url` query param"}));
         }
     };
     let encoded = encode_url_to_base64(url);
@@ -800,7 +797,7 @@ pub async fn base64_decode(query: web::Query<Base64Query>) -> HttpResponse {
         Some(e) => e.as_str(),
         None => {
             return HttpResponse::BadRequest()
-                .json(serde_json::json!({"error": "missing `encoded_url` query param"}))
+                .json(serde_json::json!({"error": "missing `encoded_url` query param"}));
         }
     };
     match decode_base64_url(enc) {
@@ -816,15 +813,13 @@ pub async fn base64_check(query: web::Query<Base64Query>) -> HttpResponse {
         Some(u) => u.as_str(),
         None => {
             return HttpResponse::BadRequest()
-                .json(serde_json::json!({"error": "missing `url` query param"}))
+                .json(serde_json::json!({"error": "missing `url` query param"}));
         }
     };
     let is_b64 = is_base64_url(url);
     let mut result = serde_json::json!({"url": url, "is_base64": is_b64});
-    if is_b64 {
-        if let Some(decoded) = decode_base64_url(url) {
-            result["decoded_url"] = serde_json::Value::String(decoded);
-        }
+    if is_b64 && let Some(decoded) = decode_base64_url(url) {
+        result["decoded_url"] = serde_json::Value::String(decoded);
     }
     HttpResponse::Ok().json(result)
 }

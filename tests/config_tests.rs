@@ -8,13 +8,20 @@ fn setup() -> MutexGuard<'static, ()> {
     let guard = ENV_LOCK
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
-    env::remove_var("APP__SERVER__HOST");
-    env::remove_var("APP__SERVER__PORT");
-    env::remove_var("APP__SERVER__PATH");
-    env::remove_var("APP__AUTH__API_PASSWORD");
-    env::remove_var("APP__PROXY__BUFFER_SIZE");
-    env::remove_var("APP__PROXY__TRANSPORT_ROUTES");
-    env::remove_var("CONFIG_PATH");
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::remove_var("APP__SERVER__HOST") };
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::remove_var("APP__SERVER__PORT") };
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::remove_var("APP__SERVER__PATH") };
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::remove_var("APP__AUTH__API_PASSWORD") };
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::remove_var("APP__PROXY__BUFFER_SIZE") };
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::remove_var("APP__PROXY__TRANSPORT_ROUTES") };
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::remove_var("CONFIG_PATH") };
     guard
 }
 
@@ -23,11 +30,16 @@ fn test_config_from_env() {
     let _guard = setup();
 
     // Set environment variables
-    env::set_var("APP__SERVER__HOST", "0.0.0.0");
-    env::set_var("APP__SERVER__PORT", "8888"); // Match the default port in Config
-    env::set_var("APP__SERVER__PATH", "/mediaflow/prefix");
-    env::set_var("APP__AUTH__API_PASSWORD", "test_password");
-    env::set_var("APP__PROXY__BUFFER_SIZE", "16384");
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::set_var("APP__SERVER__HOST", "0.0.0.0") };
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::set_var("APP__SERVER__PORT", "8888") }; // Match the default port in Config
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::set_var("APP__SERVER__PATH", "/mediaflow/prefix") };
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::set_var("APP__AUTH__API_PASSWORD", "test_password") };
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::set_var("APP__PROXY__BUFFER_SIZE", "16384") };
 
     let config = Config::from_env().unwrap();
 
@@ -46,7 +58,8 @@ fn test_transport_routes_config() {
     // Modify the JSON string to be a single line with escaped quotes
     let routes_json = r#"{"all://*.streaming.com":{"proxy":true,"proxy_url":"socks5://test-proxy:1080","verify_ssl":true}}"#;
 
-    env::set_var("APP__PROXY__TRANSPORT_ROUTES", routes_json);
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::set_var("APP__PROXY__TRANSPORT_ROUTES", routes_json) };
 
     let config = Config::from_env().unwrap();
 
@@ -107,7 +120,8 @@ verify_ssl = true
     fs::write(&config_path, config_content).expect("Failed to write config");
 
     // Set the config path environment variable
-    env::set_var("CONFIG_PATH", config_path.to_str().unwrap());
+    // FIXME: Audit that the environment access only happens in single-threaded code.
+    unsafe { env::set_var("CONFIG_PATH", config_path.to_str().unwrap()) };
 
     let config = Config::from_env().unwrap();
 

@@ -4,7 +4,7 @@
 //!
 //! Compatible with Channels DVR, Plex, Emby, and all XMLTV-based EPG clients.
 
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use bytes::Bytes;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use std::collections::HashMap;
@@ -68,13 +68,13 @@ pub async fn epg_proxy_handler(
     // --- Build upstream request headers from h_<name> params -------------
     let mut upstream_headers = HeaderMap::new();
     for (key, value) in &query {
-        if let Some(header_name) = key.strip_prefix("h_") {
-            if let (Ok(name), Ok(val)) = (
+        if let Some(header_name) = key.strip_prefix("h_")
+            && let (Ok(name), Ok(val)) = (
                 HeaderName::from_str(header_name),
                 HeaderValue::from_str(value),
-            ) {
-                upstream_headers.insert(name, val);
-            }
+            )
+        {
+            upstream_headers.insert(name, val);
         }
     }
 
@@ -93,11 +93,11 @@ pub async fn epg_proxy_handler(
     };
 
     // --- Cache read -------------------------------------------------------
-    if effective_ttl > 0 {
-        if let Some(cached) = epg_cache.0.get(&cache_key).await {
-            tracing::debug!("[epg_proxy] Cache HIT: {}", destination);
-            return Ok(build_response(cached, "HIT", effective_ttl));
-        }
+    if effective_ttl > 0
+        && let Some(cached) = epg_cache.0.get(&cache_key).await
+    {
+        tracing::debug!("[epg_proxy] Cache HIT: {}", destination);
+        return Ok(build_response(cached, "HIT", effective_ttl));
     }
 
     // --- Upstream fetch ---------------------------------------------------

@@ -6,7 +6,7 @@ use std::sync::OnceLock;
 use wreq::header::{HeaderMap, HeaderName, HeaderValue};
 
 use crate::extractor::base::{
-    build_chrome_client, BaseExtractor, ExtraParams, Extractor, ExtractorError, ExtractorResult,
+    BaseExtractor, ExtraParams, Extractor, ExtractorError, ExtractorResult, build_chrome_client,
 };
 use crate::extractor::packed::unpack_packed_js;
 

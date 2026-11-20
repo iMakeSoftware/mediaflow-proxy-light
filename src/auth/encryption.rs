@@ -1,7 +1,7 @@
 use aes::Aes256;
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
+use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use cbc::{Decryptor, Encryptor};
-use cipher::{block_padding::Pkcs7, BlockDecryptMut, BlockEncryptMut, KeyIvInit};
+use cipher::{BlockDecryptMut, BlockEncryptMut, KeyIvInit, block_padding::Pkcs7};
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -152,10 +152,10 @@ impl EncryptionHandler {
             }
         }
 
-        if let (Some(token_ip), Some(client_ip)) = (proxy_data.ip.as_ref(), client_ip) {
-            if token_ip != client_ip {
-                return Err(AppError::Auth("IP mismatch".to_string()));
-            }
+        if let (Some(token_ip), Some(client_ip)) = (proxy_data.ip.as_ref(), client_ip)
+            && token_ip != client_ip
+        {
+            return Err(AppError::Auth("IP mismatch".to_string()));
         }
 
         Ok(proxy_data)

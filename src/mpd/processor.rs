@@ -14,8 +14,8 @@ use crate::mpd::parser::{
 };
 use crate::mpd::segment::{expand_template, resolve_url};
 use crate::mpd::timeline::{
-    generate_live_segments, generate_vod_segments, parse_datetime_to_unix, parse_duration,
-    preprocess_timeline, TimelineEntry,
+    TimelineEntry, generate_live_segments, generate_vod_segments, parse_datetime_to_unix,
+    parse_duration, preprocess_timeline,
 };
 
 // ---------------------------------------------------------------------------
@@ -680,16 +680,16 @@ fn compute_init_url(
         .segment_template
         .as_ref()
         .or(adaptation.segment_template.as_ref());
-    if let Some(t) = tmpl {
-        if let Some(init) = t.initialization.as_deref() {
-            let expanded = expand_template(init, profile_id, bandwidth, 1, None);
-            let path = if !base_url_str.is_empty() {
-                format!("{base_url_str}{expanded}")
-            } else {
-                expanded
-            };
-            return (Some(resolve_url(mpd_url, &path)), None);
-        }
+    if let Some(t) = tmpl
+        && let Some(init) = t.initialization.as_deref()
+    {
+        let expanded = expand_template(init, profile_id, bandwidth, 1, None);
+        let path = if !base_url_str.is_empty() {
+            format!("{base_url_str}{expanded}")
+        } else {
+            expanded
+        };
+        return (Some(resolve_url(mpd_url, &path)), None);
     }
 
     // SegmentList Initialization @sourceURL
@@ -697,19 +697,19 @@ fn compute_init_url(
         .segment_list
         .as_ref()
         .or(adaptation.segment_list.as_ref());
-    if let Some(list) = seg_list {
-        if let Some(init) = &list.initialization {
-            if let Some(source_url) = init.source_url.as_deref() {
-                return (Some(resolve_url(mpd_url, source_url)), None);
-            }
-            if let Some(range) = init.range.as_deref() {
-                let base = rep
-                    .base_url
-                    .as_ref()
-                    .and_then(|b| b.value.as_deref())
-                    .unwrap_or("");
-                return (Some(resolve_url(mpd_url, base)), Some(range.to_string()));
-            }
+    if let Some(list) = seg_list
+        && let Some(init) = &list.initialization
+    {
+        if let Some(source_url) = init.source_url.as_deref() {
+            return (Some(resolve_url(mpd_url, source_url)), None);
+        }
+        if let Some(range) = init.range.as_deref() {
+            let base = rep
+                .base_url
+                .as_ref()
+                .and_then(|b| b.value.as_deref())
+                .unwrap_or("");
+            return (Some(resolve_url(mpd_url, base)), Some(range.to_string()));
         }
     }
 
@@ -751,10 +751,10 @@ fn extract_drm_info(cps: &[ContentProtection], mpd_url: &str) -> DrmInfo {
         if scheme.contains("clearkey") {
             info.drm_system
                 .get_or_insert_with(|| "clearkey".to_string());
-            if let Some(laurl) = cp.clearkey_laurl.as_ref().and_then(|l| l.value.as_deref()) {
-                if info.la_url.is_none() {
-                    info.la_url = Some(laurl.to_string());
-                }
+            if let Some(laurl) = cp.clearkey_laurl.as_ref().and_then(|l| l.value.as_deref())
+                && info.la_url.is_none()
+            {
+                info.la_url = Some(laurl.to_string());
             }
         } else if scheme.contains("widevine")
             || scheme.contains("edef8ba9-79d6-4ace-a3c8-27dcd51d21ed")
@@ -769,10 +769,10 @@ fn extract_drm_info(cps: &[ContentProtection], mpd_url: &str) -> DrmInfo {
         {
             info.drm_system
                 .get_or_insert_with(|| "playready".to_string());
-            if let Some(la) = cp.ms_laurl.as_ref().and_then(|m| m.license_url.as_deref()) {
-                if info.la_url.is_none() {
-                    info.la_url = Some(la.to_string());
-                }
+            if let Some(la) = cp.ms_laurl.as_ref().and_then(|m| m.license_url.as_deref())
+                && info.la_url.is_none()
+            {
+                info.la_url = Some(la.to_string());
             }
         }
 
@@ -783,11 +783,12 @@ fn extract_drm_info(cps: &[ContentProtection], mpd_url: &str) -> DrmInfo {
     }
 
     // Resolve relative LA URL
-    if let Some(la) = info.la_url.as_deref() {
-        if !la.starts_with("http://") && !la.starts_with("https://") {
-            let resolved = resolve_url(mpd_url, la);
-            info.la_url = Some(resolved);
-        }
+    if let Some(la) = info.la_url.as_deref()
+        && !la.starts_with("http://")
+        && !la.starts_with("https://")
+    {
+        let resolved = resolve_url(mpd_url, la);
+        info.la_url = Some(resolved);
     }
 
     info
@@ -825,10 +826,10 @@ pub fn compute_live_media_sequence(
         .nominal_duration_mpd_timescale
         .or_else(|| resolve_nominal_duration(segments));
 
-    if let (Some(t), Some(nom)) = (first_segment.time, nominal) {
-        if let Some(n) = t.checked_div(nom) {
-            return n.max(1);
-        }
+    if let (Some(t), Some(nom)) = (first_segment.time, nominal)
+        && let Some(n) = t.checked_div(nom)
+    {
+        return n.max(1);
     }
 
     first_segment.number.max(1)
@@ -844,19 +845,19 @@ pub fn compute_live_playlist_depth(
     let depth_floor = if is_ts_mode { 20 } else { 15 };
     let mut depth = configured_depth.max(depth_floor);
 
-    if let Some(offset) = effective_start_offset {
-        if offset < 0.0 {
-            let segment_duration = if !extinf_values.is_empty() {
-                let mut sorted: Vec<f64> = extinf_values.to_vec();
-                sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
-                sorted[sorted.len() / 2].max(0.1)
-            } else {
-                4.0
-            };
-            let segs_behind = (offset.abs() / segment_duration).ceil() as usize;
-            let safety = if is_ts_mode { 10 } else { 12 };
-            depth = depth.max(segs_behind + safety);
-        }
+    if let Some(offset) = effective_start_offset
+        && offset < 0.0
+    {
+        let segment_duration = if !extinf_values.is_empty() {
+            let mut sorted: Vec<f64> = extinf_values.to_vec();
+            sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+            sorted[sorted.len() / 2].max(0.1)
+        } else {
+            4.0
+        };
+        let segs_behind = (offset.abs() / segment_duration).ceil() as usize;
+        let safety = if is_ts_mode { 10 } else { 12 };
+        depth = depth.max(segs_behind + safety);
     }
 
     depth.max(1)
@@ -1150,11 +1151,11 @@ pub fn build_hls_media_playlist(
         let duration = segment.extinf;
 
         // Skip filter
-        if let Some(ref mut sf) = skip_filter {
-            if sf.check_and_advance(duration) {
-                need_discontinuity = true;
-                continue;
-            }
+        if let Some(ref mut sf) = skip_filter
+            && sf.check_and_advance(duration)
+        {
+            need_discontinuity = true;
+            continue;
         }
 
         // Emit EXT-X-MAP when init URL changes (first segment or period boundary)
@@ -1185,10 +1186,10 @@ pub fn build_hls_media_playlist(
             need_discontinuity = false;
         }
 
-        if let Some(pdt) = &segment.program_date_time {
-            if !is_ts_mode {
-                hls.push(format!("#EXT-X-PROGRAM-DATE-TIME:{pdt}"));
-            }
+        if let Some(pdt) = &segment.program_date_time
+            && !is_ts_mode
+        {
+            hls.push(format!("#EXT-X-PROGRAM-DATE-TIME:{pdt}"));
         }
 
         hls.push(format!("#EXTINF:{duration:.3},"));
@@ -1561,8 +1562,10 @@ mod tests {
         assert!(
             playlist.starts_with("https://proxy.example.test/mediaflow/prefix/proxy/mpd/playlist?")
         );
-        assert!(segment
-            .starts_with("https://proxy.example.test/mediaflow/prefix/proxy/mpd/segment.mp4?"));
+        assert!(
+            segment
+                .starts_with("https://proxy.example.test/mediaflow/prefix/proxy/mpd/segment.mp4?")
+        );
         assert!(init.starts_with("https://proxy.example.test/mediaflow/prefix/proxy/mpd/init?"));
     }
 }

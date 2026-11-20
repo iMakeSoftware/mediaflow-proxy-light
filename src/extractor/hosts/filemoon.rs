@@ -2,10 +2,10 @@ use async_trait::async_trait;
 use std::collections::HashMap;
 
 use aes_gcm::{
-    aead::{Aead, KeyInit},
     Aes256Gcm, Nonce,
+    aead::{Aead, KeyInit},
 };
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine as _};
+use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 
 use crate::extractor::base::{
     BaseExtractor, ExtraParams, Extractor, ExtractorError, ExtractorResult,

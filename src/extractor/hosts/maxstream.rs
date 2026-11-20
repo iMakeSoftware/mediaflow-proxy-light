@@ -5,7 +5,7 @@ use std::sync::OnceLock;
 use wreq::header::{HeaderMap, HeaderName, HeaderValue};
 
 use crate::extractor::base::{
-    build_chrome_client, BaseExtractor, ExtraParams, Extractor, ExtractorError, ExtractorResult,
+    BaseExtractor, ExtraParams, Extractor, ExtractorError, ExtractorResult, build_chrome_client,
 };
 
 // ---------------------------------------------------------------------------
@@ -100,17 +100,17 @@ fn parse_uprot_html(html: &str) -> Option<String> {
     let cleaned = strip_uprot_honeypots(html).replace("\\/", "/");
 
     // 1. id="buttok" CONTINUE button
-    if let Some(cap) = buttok_re().captures(&cleaned) {
-        if let Some(m) = cap.get(1) {
-            return Some(m.as_str().to_string());
-        }
+    if let Some(cap) = buttok_re().captures(&cleaned)
+        && let Some(m) = cap.get(1)
+    {
+        return Some(m.as_str().to_string());
     }
 
     // 2. Generic <a><button>Continue</button></a>
-    if let Some(cap) = continue_btn_re().captures(&cleaned) {
-        if let Some(m) = cap.get(1) {
-            return Some(m.as_str().to_string());
-        }
+    if let Some(cap) = continue_btn_re().captures(&cleaned)
+        && let Some(m) = cap.get(1)
+    {
+        return Some(m.as_str().to_string());
     }
 
     // 3. Unique uprots/uprotem URL (appears exactly once — not a honeypot duplicate)
@@ -142,15 +142,15 @@ fn parse_uprot_html(html: &str) -> Option<String> {
     }
 
     // 5. window.location / meta refresh redirect
-    if let Some(cap) = window_location_re().captures(&cleaned) {
-        if let Some(m) = cap.get(1) {
-            return Some(m.as_str().to_string());
-        }
+    if let Some(cap) = window_location_re().captures(&cleaned)
+        && let Some(m) = cap.get(1)
+    {
+        return Some(m.as_str().to_string());
     }
-    if let Some(cap) = meta_refresh_re().captures(&cleaned) {
-        if let Some(m) = cap.get(1) {
-            return Some(m.as_str().to_string());
-        }
+    if let Some(cap) = meta_refresh_re().captures(&cleaned)
+        && let Some(m) = cap.get(1)
+    {
+        return Some(m.as_str().to_string());
     }
 
     None
@@ -352,14 +352,14 @@ impl Extractor for MaxstreamExtractor {
         result_headers.insert("referer".to_string(), maxstream_url.clone());
 
         // Fix 5: Try the direct `sources:[{src:"..."` pattern first.
-        if let Some(cap) = direct_sources_re().captures(&html2) {
-            if let Some(m) = cap.get(1) {
-                return Ok(ExtractorResult {
-                    destination_url: m.as_str().to_string(),
-                    request_headers: result_headers,
-                    mediaflow_endpoint: "hls_manifest_proxy",
-                });
-            }
+        if let Some(cap) = direct_sources_re().captures(&html2)
+            && let Some(m) = cap.get(1)
+        {
+            return Ok(ExtractorResult {
+                destination_url: m.as_str().to_string(),
+                request_headers: result_headers,
+                mediaflow_endpoint: "hls_manifest_proxy",
+            });
         }
 
         // Fallback: decode the packed JS player.

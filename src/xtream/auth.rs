@@ -8,7 +8,7 @@
 //!
 //! The XC *password* field is passed through unchanged to the upstream server.
 
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use tracing::debug;
 
 use crate::error::{AppError, AppResult};
@@ -156,7 +156,7 @@ fn parse_legacy_username(username: &str) -> AppResult<XcCredentials> {
                 "Invalid XC username format. Expected base64url-encoded string or \
                  legacy `{base64_upstream}:{username}[:{api_password}]`."
                     .into(),
-            ))
+            ));
         }
     };
 

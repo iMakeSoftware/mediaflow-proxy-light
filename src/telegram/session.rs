@@ -14,7 +14,7 @@ use tokio::sync::{Mutex, RwLock};
 use {
     actix_web::web::Bytes,
     async_stream::stream,
-    base64::{engine::general_purpose, Engine},
+    base64::{Engine, engine::general_purpose},
     futures::Stream,
     grammers_client::session::Session,
     grammers_client::{Client, Config, InitParams},
@@ -94,12 +94,12 @@ async fn fetch_and_cache_channel_hashes(client: &Client, target_channel_id: i64)
             {
                 let mut w = cache.write().await;
                 for chat in chats {
-                    if let tl::enums::Chat::Channel(ch) = chat {
-                        if let Some(hash) = ch.access_hash {
-                            w.insert(ch.id, hash);
-                            if ch.id == target_channel_id {
-                                found = Some(hash);
-                            }
+                    if let tl::enums::Chat::Channel(ch) = chat
+                        && let Some(hash) = ch.access_hash
+                    {
+                        w.insert(ch.id, hash);
+                        if ch.id == target_channel_id {
+                            found = Some(hash);
                         }
                     }
                 }
@@ -395,29 +395,27 @@ fn extract_doc_info_from_msgs(
     };
 
     for msg in messages {
-        if let tl::enums::Message::Message(m) = msg {
-            if let Some(tl::enums::MessageMedia::Document(md)) = &m.media {
-                if let Some(tl::enums::Document::Document(doc)) = &md.document {
-                    if doc.id == document_id {
-                        let file_name = doc.attributes.iter().find_map(|attr| {
-                            if let tl::enums::DocumentAttribute::Filename(f) = attr {
-                                Some(f.file_name.clone())
-                            } else {
-                                None
-                            }
-                        });
-                        return Some(FreshFileLocation {
-                            document_id: doc.id,
-                            file_reference: doc.file_reference.clone(),
-                            access_hash: doc.access_hash,
-                            dc_id: doc.dc_id,
-                            file_size: doc.size as u64,
-                            mime_type: doc.mime_type.clone(),
-                            file_name,
-                        });
-                    }
+        if let tl::enums::Message::Message(m) = msg
+            && let Some(tl::enums::MessageMedia::Document(md)) = &m.media
+            && let Some(tl::enums::Document::Document(doc)) = &md.document
+            && doc.id == document_id
+        {
+            let file_name = doc.attributes.iter().find_map(|attr| {
+                if let tl::enums::DocumentAttribute::Filename(f) = attr {
+                    Some(f.file_name.clone())
+                } else {
+                    None
                 }
-            }
+            });
+            return Some(FreshFileLocation {
+                document_id: doc.id,
+                file_reference: doc.file_reference.clone(),
+                access_hash: doc.access_hash,
+                dc_id: doc.dc_id,
+                file_size: doc.size as u64,
+                mime_type: doc.mime_type.clone(),
+                file_name,
+            });
         }
     }
     None
@@ -437,27 +435,26 @@ fn extract_file_location_from_msgs(
     };
 
     for msg in messages {
-        if let tl::enums::Message::Message(m) = msg {
-            if let Some(tl::enums::MessageMedia::Document(md)) = &m.media {
-                if let Some(tl::enums::Document::Document(doc)) = &md.document {
-                    let file_name = doc.attributes.iter().find_map(|attr| {
-                        if let tl::enums::DocumentAttribute::Filename(f) = attr {
-                            Some(f.file_name.clone())
-                        } else {
-                            None
-                        }
-                    });
-                    return Some(FreshFileLocation {
-                        document_id: doc.id,
-                        file_reference: doc.file_reference.clone(),
-                        access_hash: doc.access_hash,
-                        dc_id: doc.dc_id,
-                        file_size: doc.size as u64,
-                        mime_type: doc.mime_type.clone(),
-                        file_name,
-                    });
+        if let tl::enums::Message::Message(m) = msg
+            && let Some(tl::enums::MessageMedia::Document(md)) = &m.media
+            && let Some(tl::enums::Document::Document(doc)) = &md.document
+        {
+            let file_name = doc.attributes.iter().find_map(|attr| {
+                if let tl::enums::DocumentAttribute::Filename(f) = attr {
+                    Some(f.file_name.clone())
+                } else {
+                    None
                 }
-            }
+            });
+            return Some(FreshFileLocation {
+                document_id: doc.id,
+                file_reference: doc.file_reference.clone(),
+                access_hash: doc.access_hash,
+                dc_id: doc.dc_id,
+                file_size: doc.size as u64,
+                mime_type: doc.mime_type.clone(),
+                file_name,
+            });
         }
     }
     None
@@ -552,17 +549,17 @@ pub async fn get_fresh_document_info(
                 .await
                 .ok(),
         };
-        if let Some(result) = fast_result {
-            if let Some(info) = extract_doc_info_from_msgs(&result, document_id) {
-                info!(
-                    "Got fresh doc info via GetMessages (message_id={}): fref={}, dc={}, doc_id={}",
-                    mid,
-                    hex::encode(&info.file_reference),
-                    info.dc_id,
-                    info.document_id,
-                );
-                return Some(info);
-            }
+        if let Some(result) = fast_result
+            && let Some(info) = extract_doc_info_from_msgs(&result, document_id)
+        {
+            info!(
+                "Got fresh doc info via GetMessages (message_id={}): fref={}, dc={}, doc_id={}",
+                mid,
+                hex::encode(&info.file_reference),
+                info.dc_id,
+                info.document_id,
+            );
+            return Some(info);
         }
     }
 

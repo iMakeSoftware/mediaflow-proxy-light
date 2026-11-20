@@ -1,6 +1,6 @@
 //! Telegram media URL parsing and Bot API file_id decoding.
 
-use base64::{engine::general_purpose, Engine};
+use base64::{Engine, engine::general_purpose};
 use regex::Regex;
 
 /// Decoded Bot API file_id structure.

@@ -661,7 +661,7 @@ fn from_python_flat_dict_strips_exp_and_ip_from_params() {
 
 #[cfg(test)]
 mod middleware_tests {
-    use actix_web::{test, web, App, HttpRequest, HttpResponse};
+    use actix_web::{App, HttpRequest, HttpResponse, test, web};
     use mediaflow_proxy_light::auth::encryption::{EncryptionHandler, ProxyData};
     use mediaflow_proxy_light::auth::middleware::AuthMiddleware;
 

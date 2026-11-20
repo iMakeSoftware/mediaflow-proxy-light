@@ -3,11 +3,11 @@
 //! `AppMetrics` is created once and stored in actix-web `Data<AppMetrics>`.
 //! Every handler increments the relevant counters; `GET /metrics` returns them as JSON.
 
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use actix_web::{web, HttpResponse};
+use actix_web::{HttpResponse, web};
 use serde::Serialize;
 
 // ---------------------------------------------------------------------------

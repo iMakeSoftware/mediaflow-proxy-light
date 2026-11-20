@@ -19,10 +19,10 @@ pub fn resolve_url(base_url: &str, relative: &str) -> String {
     if relative.starts_with("http://") || relative.starts_with("https://") {
         return relative.to_string();
     }
-    if let Ok(base) = Url::parse(base_url) {
-        if let Ok(resolved) = base.join(relative) {
-            return resolved.to_string();
-        }
+    if let Ok(base) = Url::parse(base_url)
+        && let Ok(resolved) = base.join(relative)
+    {
+        return resolved.to_string();
     }
     // Fallback: simple concatenation for relative paths
     if base_url.ends_with('/') {

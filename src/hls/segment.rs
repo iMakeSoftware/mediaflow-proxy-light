@@ -3,9 +3,9 @@
 /// Routes `GET /proxy/hls/segment.{ext}` to the upstream origin, optionally
 /// decrypting DRM-protected bytes (Phase 3).
 use actix_web::{
+    HttpRequest, HttpResponse,
     body::SizedStream,
     web::{self, Bytes},
-    HttpRequest, HttpResponse,
 };
 use futures::stream;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
@@ -75,25 +75,24 @@ pub async fn hls_segment_handler(
             .await;
     }
 
-    if !has_range {
-        if let Some(bytes) = hls_prebuffer
+    if !has_range
+        && let Some(bytes) = hls_prebuffer
             .get_cached_segment(&proxy_data.destination, &pass_headers)
             .await
-        {
-            metrics.add_bytes_out(bytes.len() as u64);
-            let content_len = bytes.len();
-            let mut resp = HttpResponse::Ok();
-            resp.content_type(hls_segment_content_type(&proxy_data.destination));
-            resp.insert_header(("cache-control", "no-cache"));
-            resp.insert_header((
-                actix_web::http::header::CONTENT_LENGTH,
-                content_len.to_string(),
-            ));
-            apply_custom_headers(&mut resp, &proxy_data.response_headers);
-            resp.force_close();
+    {
+        metrics.add_bytes_out(bytes.len() as u64);
+        let content_len = bytes.len();
+        let mut resp = HttpResponse::Ok();
+        resp.content_type(hls_segment_content_type(&proxy_data.destination));
+        resp.insert_header(("cache-control", "no-cache"));
+        resp.insert_header((
+            actix_web::http::header::CONTENT_LENGTH,
+            content_len.to_string(),
+        ));
+        apply_custom_headers(&mut resp, &proxy_data.response_headers);
+        resp.force_close();
 
-            return Ok(resp.no_chunking(content_len as u64).body(bytes));
-        }
+        return Ok(resp.no_chunking(content_len as u64).body(bytes));
     }
 
     let (upstream_status, upstream_headers, stream_opt) = stream_manager
@@ -114,12 +113,11 @@ pub async fn hls_segment_handler(
         "accept-ranges",
         "cache-control",
     ] {
-        if let Some(v) = upstream_headers.get(*header_name) {
-            if let Ok(val) =
+        if let Some(v) = upstream_headers.get(*header_name)
+            && let Ok(val) =
                 actix_web::http::header::HeaderValue::from_str(v.to_str().unwrap_or_default())
-            {
-                resp.insert_header((*header_name, val));
-            }
+        {
+            resp.insert_header((*header_name, val));
         }
     }
 
@@ -182,17 +180,17 @@ fn apply_custom_headers(
     resp: &mut actix_web::HttpResponseBuilder,
     custom: &Option<serde_json::Value>,
 ) {
-    if let Some(custom) = custom {
-        if let Some(map) = custom.as_object() {
-            for (k, v) in map {
-                if let Some(v_str) = v.as_str() {
-                    if let (Ok(name), Ok(val)) = (
-                        actix_web::http::header::HeaderName::from_str(k),
-                        actix_web::http::header::HeaderValue::from_str(v_str),
-                    ) {
-                        resp.insert_header((name, val));
-                    }
-                }
+    if let Some(custom) = custom
+        && let Some(map) = custom.as_object()
+    {
+        for (k, v) in map {
+            if let Some(v_str) = v.as_str()
+                && let (Ok(name), Ok(val)) = (
+                    actix_web::http::header::HeaderName::from_str(k),
+                    actix_web::http::header::HeaderValue::from_str(v_str),
+                )
+            {
+                resp.insert_header((name, val));
             }
         }
     }

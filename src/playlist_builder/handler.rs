@@ -15,7 +15,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use reqwest::header::HeaderMap;
 use urlencoding::encode as url_encode;
 
@@ -76,17 +76,17 @@ fn rewrite_m3u(content: &str, base_url: &str, api_password: &str) -> String {
             out.push_str(line);
             out.push('\n');
             // Parse http-* headers
-            if let Some(opt) = logical.strip_prefix("#EXTVLCOPT:") {
-                if let Some((k, v)) = opt.split_once('=') {
-                    let k = k.trim();
-                    let v = v.trim();
-                    if k == "http-header" {
-                        if let Some((hk, hv)) = v.split_once(':') {
-                            current_headers.insert(hk.trim().to_lowercase(), hv.trim().to_string());
-                        }
-                    } else if let Some(hname) = k.strip_prefix("http-") {
-                        current_headers.insert(hname.to_lowercase(), v.to_string());
+            if let Some(opt) = logical.strip_prefix("#EXTVLCOPT:")
+                && let Some((k, v)) = opt.split_once('=')
+            {
+                let k = k.trim();
+                let v = v.trim();
+                if k == "http-header" {
+                    if let Some((hk, hv)) = v.split_once(':') {
+                        current_headers.insert(hk.trim().to_lowercase(), hv.trim().to_string());
                     }
+                } else if let Some(hname) = k.strip_prefix("http-") {
+                    current_headers.insert(hname.to_lowercase(), v.to_string());
                 }
             }
             continue;
@@ -95,13 +95,13 @@ fn rewrite_m3u(content: &str, base_url: &str, api_password: &str) -> String {
         if logical.starts_with("#EXTHTTP:") {
             out.push_str(line);
             out.push('\n');
-            if let Some(json_str) = logical.strip_prefix("#EXTHTTP:") {
-                if let Ok(serde_json::Value::Object(map)) = serde_json::from_str(json_str) {
-                    current_headers = map
-                        .iter()
-                        .filter_map(|(k, v)| v.as_str().map(|s| (k.to_lowercase(), s.to_string())))
-                        .collect();
-                }
+            if let Some(json_str) = logical.strip_prefix("#EXTHTTP:")
+                && let Ok(serde_json::Value::Object(map)) = serde_json::from_str(json_str)
+            {
+                current_headers = map
+                    .iter()
+                    .filter_map(|(k, v)| v.as_str().map(|s| (k.to_lowercase(), s.to_string())))
+                    .collect();
             }
             continue;
         }
@@ -109,10 +109,10 @@ fn rewrite_m3u(content: &str, base_url: &str, api_password: &str) -> String {
         if logical.starts_with("#KODIPROP:") {
             out.push_str(line);
             out.push('\n');
-            if let Some(prop) = logical.strip_prefix("#KODIPROP:") {
-                if let Some((k, v)) = prop.split_once('=') {
-                    current_kodi.insert(k.trim().to_string(), v.trim().to_string());
-                }
+            if let Some(prop) = logical.strip_prefix("#KODIPROP:")
+                && let Some((k, v)) = prop.split_once('=')
+            {
+                current_kodi.insert(k.trim().to_string(), v.trim().to_string());
             }
             continue;
         }

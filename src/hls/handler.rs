@@ -1,9 +1,9 @@
 /// Actix-web route handlers for HLS endpoints.
 use std::collections::HashMap;
-use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use std::str::FromStr;
 
@@ -12,7 +12,7 @@ use crate::{
     config::Config,
     error::AppResult,
     hls::manifest::{
-        error_playlist, graceful_end_playlist, ManifestOptions, ManifestProcessor, ProxyParams,
+        ManifestOptions, ManifestProcessor, ProxyParams, error_playlist, graceful_end_playlist,
     },
     hls::prebuffer::HlsPrebuffer,
     metrics::AppMetrics,
@@ -196,11 +196,11 @@ mod tests {
             MpdConfig, ProxyConfig, RedisConfig, ServerConfig, TelegramConfig, TranscodeConfig,
         },
     };
-    use actix_web::{test, App};
+    use actix_web::{App, test};
     use std::collections::HashMap;
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::TcpListener;
-    use tokio::time::{sleep, Duration, Instant};
+    use tokio::time::{Duration, Instant, sleep};
 
     fn test_config() -> Arc<Config> {
         Arc::new(Config {

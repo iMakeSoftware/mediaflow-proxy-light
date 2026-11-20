@@ -9,16 +9,16 @@
 //! - `GET  /proxy/telegram/status`             — session status
 
 use std::collections::HashMap;
-use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 
 use actix_web::{
+    HttpRequest, HttpResponse,
     body::SizedStream,
     web::{self, Bytes},
-    HttpRequest, HttpResponse,
 };
-use futures::stream;
 use futures::StreamExt;
+use futures::stream;
 
 use crate::{
     config::Config,
@@ -116,8 +116,8 @@ pub async fn telegram_stream_handler(
     {
         use crate::proxy::stream::ResponseStream;
         use crate::telegram::session::{
-            get_fresh_document_info, get_location_from_message_id, get_or_init_client,
-            stream_document_range, FreshFileLocation,
+            FreshFileLocation, get_fresh_document_info, get_location_from_message_id,
+            get_or_init_client, stream_document_range,
         };
         use grammers_tl_types as tl;
 
@@ -162,7 +162,7 @@ pub async fn telegram_stream_handler(
                     )));
                 }
             }
-        } else if let (Some(chat_id), Some(ref fid)) = (&chat_id_opt, &file_id_opt) {
+        } else if let (Some(chat_id), Some(fid)) = (&chat_id_opt, &file_id_opt) {
             // Mode 4: chat_id + file_id → decode file_id to get doc_id, scan history
             let decoded = decode_file_id(fid)
                 .ok_or_else(|| AppError::BadRequest("Cannot decode file_id".into()))?;

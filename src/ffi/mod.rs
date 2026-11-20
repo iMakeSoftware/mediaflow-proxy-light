@@ -199,7 +199,7 @@ pub unsafe extern "C" fn mediaflow_server_start(srv: *mut MediaflowServer) -> Me
             use crate::proxy::{handler, stream::StreamManager};
             use actix_cors::Cors;
             use actix_web::middleware::Logger;
-            use actix_web::{middleware, web, App, HttpServer};
+            use actix_web::{App, HttpServer, middleware, web};
             use std::sync::Arc;
 
             let auth_middleware = AuthMiddleware::new(cfg.auth.api_password.clone());

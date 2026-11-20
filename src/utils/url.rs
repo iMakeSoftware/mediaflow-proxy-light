@@ -162,10 +162,10 @@ fn sanitize_forwarded_host(value: &str) -> Option<&str> {
     {
         return None;
     }
-    if let Some(port) = port {
-        if port.parse::<u16>().is_err() {
-            return None;
-        }
+    if let Some(port) = port
+        && port.parse::<u16>().is_err()
+    {
+        return None;
     }
     Some(value)
 }

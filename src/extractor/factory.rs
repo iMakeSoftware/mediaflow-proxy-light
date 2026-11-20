@@ -42,7 +42,7 @@ pub fn get_extractor(
     }
 
     macro_rules! extractors {
-        ($($name:expr => $ty:ty),* $(,)?) => {{
+        ($($name:expr_2021 => $ty:ty),* $(,)?) => {{
             static MAP: std::sync::OnceLock<HashMap<&'static str, FactoryFn>> =
                 std::sync::OnceLock::new();
             let m = MAP.get_or_init(|| {

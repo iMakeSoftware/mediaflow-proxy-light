@@ -7,11 +7,10 @@ use tokio::time::Duration;
 use wreq::header::{HeaderMap, HeaderName, HeaderValue};
 
 use crate::extractor::base::{
-    build_chrome_client, BaseExtractor, ExtraParams, Extractor, ExtractorError, ExtractorResult,
+    BaseExtractor, ExtraParams, Extractor, ExtractorError, ExtractorResult, build_chrome_client,
 };
 
-const DOOD_UA: &str =
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36";
+const DOOD_UA: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36";
 
 fn pass_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
@@ -217,45 +216,45 @@ impl DoodStreamExtractor {
 
         // Try cookie reuse with Chrome client
         let raw_cookies = solution.get("cookies").and_then(|c| c.as_array());
-        if let Some(cookies) = raw_cookies {
-            if !cookies.is_empty() {
-                let cf_domain = cookies
-                    .iter()
-                    .find(|c| c.get("name").and_then(|n| n.as_str()) == Some("cf_clearance"))
-                    .and_then(|c| c.get("domain").and_then(|d| d.as_str()))
-                    .map(|d| d.trim_start_matches('.').to_string())
-                    .unwrap_or_else(|| "playmogo.com".to_string());
+        if let Some(cookies) = raw_cookies
+            && !cookies.is_empty()
+        {
+            let cf_domain = cookies
+                .iter()
+                .find(|c| c.get("name").and_then(|n| n.as_str()) == Some("cf_clearance"))
+                .and_then(|c| c.get("domain").and_then(|d| d.as_str()))
+                .map(|d| d.trim_start_matches('.').to_string())
+                .unwrap_or_else(|| "playmogo.com".to_string());
 
-                let retry_url = format!("https://{cf_domain}/e/{video_id}");
-                let cookie_header: String = cookies
-                    .iter()
-                    .filter_map(|c| {
-                        let name = c.get("name")?.as_str()?;
-                        let value = c.get("value")?.as_str()?;
-                        Some(format!("{name}={value}"))
-                    })
-                    .collect::<Vec<_>>()
-                    .join("; ");
+            let retry_url = format!("https://{cf_domain}/e/{video_id}");
+            let cookie_header: String = cookies
+                .iter()
+                .filter_map(|c| {
+                    let name = c.get("name")?.as_str()?;
+                    let value = c.get("value")?.as_str()?;
+                    Some(format!("{name}={value}"))
+                })
+                .collect::<Vec<_>>()
+                .join("; ");
 
-                let mut hm = HeaderMap::new();
-                if let Ok(v) = HeaderValue::from_str(ua) {
-                    hm.insert(HeaderName::from_static("user-agent"), v);
-                }
-                if let Ok(v) = HeaderValue::from_str(&format!("https://{cf_domain}/")) {
-                    hm.insert(HeaderName::from_static("referer"), v);
-                }
-                if !cookie_header.is_empty() {
-                    if let Ok(v) = HeaderValue::from_str(&cookie_header) {
-                        hm.insert(HeaderName::from_static("cookie"), v);
-                    }
-                }
+            let mut hm = HeaderMap::new();
+            if let Ok(v) = HeaderValue::from_str(ua) {
+                hm.insert(HeaderName::from_static("user-agent"), v);
+            }
+            if let Ok(v) = HeaderValue::from_str(&format!("https://{cf_domain}/")) {
+                hm.insert(HeaderName::from_static("referer"), v);
+            }
+            if !cookie_header.is_empty()
+                && let Ok(v) = HeaderValue::from_str(&cookie_header)
+            {
+                hm.insert(HeaderName::from_static("cookie"), v);
+            }
 
-                if let Ok((retry_html, retry_final)) = self.chrome_get(&retry_url, hm).await {
-                    if retry_html.contains("pass_md5") {
-                        let retry_base = base_from_url(&retry_final);
-                        return self.parse_embed_html(&retry_html, &retry_base, ua).await;
-                    }
-                }
+            if let Ok((retry_html, retry_final)) = self.chrome_get(&retry_url, hm).await
+                && retry_html.contains("pass_md5")
+            {
+                let retry_base = base_from_url(&retry_final);
+                return self.parse_embed_html(&retry_html, &retry_base, ua).await;
             }
         }
 

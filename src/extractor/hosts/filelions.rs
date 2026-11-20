@@ -48,11 +48,11 @@ impl Extractor for FileLionsExtractor {
 
         let mut video_url = None;
         for re in patterns() {
-            if let Some(cap) = re.captures(&search_in) {
-                if let Some(u) = cap.name("url").or_else(|| cap.get(1)) {
-                    video_url = Some(u.as_str().to_string());
-                    break;
-                }
+            if let Some(cap) = re.captures(&search_in)
+                && let Some(u) = cap.name("url").or_else(|| cap.get(1))
+            {
+                video_url = Some(u.as_str().to_string());
+                break;
             }
         }
 

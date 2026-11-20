@@ -8,10 +8,10 @@
 //! - `GET /init`      — proxy a DASH init segment (EXT-X-MAP)
 
 use std::collections::HashMap;
-use std::sync::atomic::Ordering;
 use std::sync::Arc;
+use std::sync::atomic::Ordering;
 
-use actix_web::{web, HttpRequest, HttpResponse};
+use actix_web::{HttpRequest, HttpResponse, web};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use std::str::FromStr;
 
@@ -24,8 +24,8 @@ use crate::{
     mpd::{
         parser::parse_mpd,
         processor::{
-            build_hls_master, build_hls_media_playlist, parse_mpd_document, parse_sidx_fragments,
-            MpdProfile, MpdProxyParams, MpdSegment,
+            MpdProfile, MpdProxyParams, MpdSegment, build_hls_master, build_hls_media_playlist,
+            parse_mpd_document, parse_sidx_fragments,
         },
     },
     proxy::stream::StreamManager,
@@ -44,12 +44,11 @@ fn build_request_headers(proxy_data: &ProxyData) -> HeaderMap {
         .and_then(|v| v.as_object())
     {
         for (k, v) in map {
-            if let Some(val_str) = v.as_str() {
-                if let (Ok(name), Ok(value)) =
+            if let Some(val_str) = v.as_str()
+                && let (Ok(name), Ok(value)) =
                     (HeaderName::from_str(k), HeaderValue::from_str(val_str))
-                {
-                    headers.insert(name, value);
-                }
+            {
+                headers.insert(name, value);
             }
         }
     }
@@ -80,27 +79,26 @@ fn build_proxy_params(
     // e.g. key=010304...:5228...,0100...:a947...  →  key_id=010304...,0100...  key=5228...,a947...
     let mut key_id_opt = query.get("key_id").filter(|v| !v.is_empty()).cloned();
     let mut key_opt = query.get("key").filter(|v| !v.is_empty()).cloned();
-    if key_id_opt.is_none() {
-        if let Some(ref k) = key_opt.clone() {
-            if k.contains(':') {
-                let pairs: Vec<&str> = k.split(',').collect();
-                if pairs.iter().all(|p| p.contains(':')) {
-                    key_id_opt = Some(
-                        pairs
-                            .iter()
-                            .map(|p| p.split(':').next().unwrap_or(""))
-                            .collect::<Vec<_>>()
-                            .join(","),
-                    );
-                    key_opt = Some(
-                        pairs
-                            .iter()
-                            .map(|p| p.split_once(':').map(|x| x.1).unwrap_or(""))
-                            .collect::<Vec<_>>()
-                            .join(","),
-                    );
-                }
-            }
+    if key_id_opt.is_none()
+        && let Some(ref k) = key_opt.clone()
+        && k.contains(':')
+    {
+        let pairs: Vec<&str> = k.split(',').collect();
+        if pairs.iter().all(|p| p.contains(':')) {
+            key_id_opt = Some(
+                pairs
+                    .iter()
+                    .map(|p| p.split(':').next().unwrap_or(""))
+                    .collect::<Vec<_>>()
+                    .join(","),
+            );
+            key_opt = Some(
+                pairs
+                    .iter()
+                    .map(|p| p.split_once(':').map(|x| x.1).unwrap_or(""))
+                    .collect::<Vec<_>>()
+                    .join(","),
+            );
         }
     }
 
@@ -158,7 +156,9 @@ async fn expand_segment_base_segments(
             let fragments = parse_sidx_fragments(&sidx_bytes, index_range_start);
 
             if fragments.is_empty() {
-                tracing::warn!("SIDX parse returned no fragments for {media_url}, keeping single-segment fallback");
+                tracing::warn!(
+                    "SIDX parse returned no fragments for {media_url}, keeping single-segment fallback"
+                );
                 return;
             }
 
@@ -399,53 +399,53 @@ pub async fn mpd_segment_handler(
     // ~120 MB; buffering before serving causes mpv/ffmpeg to time out.
     // -----------------------------------------------------------------------
     #[cfg(feature = "drm")]
-    if let (Some(ref kid), Some(ref k)) = (&key_id, &key_val) {
-        if let Some(ref range) = segment_range {
-            // Move CDN connection setup inside the stream generator so that
-            // HTTP response headers are sent to ffmpeg immediately.  If we
-            // .await create_stream() before returning an HttpResponse, ffmpeg's
-            // open-timeout fires ("Immediate exit requested") on slow CDNs.
-            // We also send Connection: close so actix doesn't try to reuse a
-            // keep-alive connection that will have expired by the time this
-            // long-running response finishes (prevents EOF on the next request).
-            let kid_owned = kid.clone();
-            let k_owned = k.clone();
-            let range_owned = range.clone();
-            let sm = stream_manager.clone();
-            let seg_url = segment_url.clone();
-            let req_hdrs = request_headers.clone();
-            let use_map_val = use_map;
-            let init_owned = init_bytes.clone();
+    if let (Some(kid), Some(k)) = (&key_id, &key_val)
+        && let Some(ref range) = segment_range
+    {
+        // Move CDN connection setup inside the stream generator so that
+        // HTTP response headers are sent to ffmpeg immediately.  If we
+        // .await create_stream() before returning an HttpResponse, ffmpeg's
+        // open-timeout fires ("Immediate exit requested") on slow CDNs.
+        // We also send Connection: close so actix doesn't try to reuse a
+        // keep-alive connection that will have expired by the time this
+        // long-running response finishes (prevents EOF on the next request).
+        let kid_owned = kid.clone();
+        let k_owned = k.clone();
+        let range_owned = range.clone();
+        let sm = stream_manager.clone();
+        let seg_url = segment_url.clone();
+        let req_hdrs = request_headers.clone();
+        let use_map_val = use_map;
+        let init_owned = init_bytes.clone();
 
-            let out_stream = async_stream::stream! {
-                use futures::StreamExt as _;
-                let mut stream_headers = req_hdrs;
-                let range_val = format!("bytes={}", range_owned);
-                if let Ok(v) = HeaderValue::from_str(&range_val) {
-                    stream_headers.insert(reqwest::header::RANGE, v);
+        let out_stream = async_stream::stream! {
+            use futures::StreamExt as _;
+            let mut stream_headers = req_hdrs;
+            let range_val = format!("bytes={}", range_owned);
+            if let Ok(v) = HeaderValue::from_str(&range_val) {
+                stream_headers.insert(reqwest::header::RANGE, v);
+            }
+            let raw_stream = match sm.create_stream(seg_url, stream_headers, false).await {
+                Ok((_, _, Some(s))) => s,
+                Ok((_, _, None)) => {
+                    yield Err(AppError::Proxy("CDN returned empty body".to_string()));
+                    return;
                 }
-                let raw_stream = match sm.create_stream(seg_url, stream_headers, false).await {
-                    Ok((_, _, Some(s))) => s,
-                    Ok((_, _, None)) => {
-                        yield Err(AppError::Proxy("CDN returned empty body".to_string()));
-                        return;
-                    }
-                    Err(e) => { yield Err(e); return; }
-                };
-                let decrypted = crate::drm::cenc::decrypt_segment_streaming(
-                    init_owned, raw_stream, kid_owned, k_owned, !use_map_val,
-                );
-                let mut pinned = std::pin::pin!(decrypted);
-                while let Some(item) = pinned.next().await {
-                    yield item;
-                }
+                Err(e) => { yield Err(e); return; }
             };
+            let decrypted = crate::drm::cenc::decrypt_segment_streaming(
+                init_owned, raw_stream, kid_owned, k_owned, !use_map_val,
+            );
+            let mut pinned = std::pin::pin!(decrypted);
+            while let Some(item) = pinned.next().await {
+                yield item;
+            }
+        };
 
-            return Ok(HttpResponse::Ok()
-                .content_type(mime_type_to_content_type(&mime_type, &query))
-                .force_close()
-                .streaming(Box::pin(out_stream)));
-        }
+        return Ok(HttpResponse::Ok()
+            .content_type(mime_type_to_content_type(&mime_type, &query))
+            .force_close()
+            .streaming(Box::pin(out_stream)));
     }
 
     // -----------------------------------------------------------------------
@@ -461,7 +461,7 @@ pub async fn mpd_segment_handler(
     .await?;
 
     #[cfg(feature = "drm")]
-    if let (Some(ref kid), Some(ref k)) = (&key_id, &key_val) {
+    if let (Some(kid), Some(k)) = (&key_id, &key_val) {
         let decrypted =
             crate::drm::cenc::decrypt_segment(&init_bytes, &segment_bytes, kid, k, !use_map)
                 .map_err(AppError::Drm)?;
@@ -528,7 +528,7 @@ pub async fn mpd_init_handler(
     let key_val = query.get("key").filter(|v| !v.is_empty()).cloned();
 
     #[cfg(feature = "drm")]
-    let init_bytes: bytes::Bytes = if let (Some(ref kid), Some(ref k)) = (&key_id, &key_val) {
+    let init_bytes: bytes::Bytes = if let (Some(kid), Some(k)) = (&key_id, &key_val) {
         let processed =
             crate::drm::cenc::process_drm_init_segment(&raw_init, kid, k).map_err(AppError::Drm)?;
         bytes::Bytes::from(processed)

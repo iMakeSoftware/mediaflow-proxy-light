@@ -5,8 +5,8 @@
 //! engine-assigned `playback_url` (containing the `access_token`) plus
 //! `stat_url` and `command_url` for lifecycle management.
 
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 use bytes::Bytes;
@@ -120,11 +120,11 @@ impl AcestreamSessionManager {
         access_token: Option<&str>,
     ) -> Result<AcestreamSession, String> {
         // Return cached session if still live
-        if let Some(mut entry) = self.sessions.get_mut(infohash) {
-            if !entry.is_stale(Duration::from_secs(300)) {
-                entry.touch();
-                return Ok(entry.clone());
-            }
+        if let Some(mut entry) = self.sessions.get_mut(infohash)
+            && !entry.is_stale(Duration::from_secs(300))
+        {
+            entry.touch();
+            return Ok(entry.clone());
         }
 
         // Start a fresh session with the engine.
@@ -168,8 +168,8 @@ impl AcestreamSessionManager {
                     );
                     // Free mode: only manifest.m3u8 works; getstream returns 500.
                     let url = format!(
-                            "http://{engine_host}:{engine_port}/ace/manifest.m3u8?{id_key}={id_param}{token_suffix}"
-                        );
+                        "http://{engine_host}:{engine_port}/ace/manifest.m3u8?{id_key}={id_param}{token_suffix}"
+                    );
                     // Synthetic command URL for free mode
                     let cmd = Some(format!(
                         "http://{engine_host}:{engine_port}/ace/cmd?pid={pid}"
@@ -259,7 +259,7 @@ impl AcestreamSessionManager {
     pub async fn open_ts_stream(
         &self,
         ts_url: &str,
-    ) -> Result<impl Stream<Item = Result<Bytes, String>>, String> {
+    ) -> Result<impl Stream<Item = Result<Bytes, String>> + use<>, String> {
         let response = self
             .stream_client
             .get(ts_url)
