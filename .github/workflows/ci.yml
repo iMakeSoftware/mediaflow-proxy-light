@@ -23,7 +23,7 @@ jobs:
   # ---------------------------------------------------------------------------
   lint-and-test:
     name: Lint & test
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
       - uses: actions/checkout@v7
@@ -64,7 +64,7 @@ jobs:
   linux-arm64-smoke:
     name: Linux aarch64 smoke build
     # Native ARM runner — avoids cross-compile entirely (and boring-sys2 issues)
-    runs-on: ubuntu-24.04-arm 
+    runs-on: ubuntu-26.04-arm 
     
     steps:
       - uses: actions/checkout@v7

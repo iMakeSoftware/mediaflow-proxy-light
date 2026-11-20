@@ -24,7 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-26.04
             target: x86_64-unknown-linux-gnu
             artifact_name: mediaflow-proxy-light
             asset_name: mediaflow-proxy-light-linux-x86_64
@@ -32,7 +32,7 @@ jobs:
           # boring-sys2 via gcc-aarch64-linux-gnu is unreliable (cc-rs / CMake /
           # bindgen can silently fall back to host gcc, producing x86_64 .o files
           # in the rlib → `Relocations in generic ELF (EM: 62)` at final link).
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-26.04-arm
             target: aarch64-unknown-linux-gnu
             artifact_name: mediaflow-proxy-light
             asset_name: mediaflow-proxy-light-linux-aarch64
@@ -125,7 +125,7 @@ jobs:
   # ---------------------------------------------------------------------------
   build-android:
     name: Android · ${{ matrix.abi }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -189,7 +189,7 @@ jobs:
   # ---------------------------------------------------------------------------
   build-docker:
     name: Docker multi-arch image
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: build-binaries
     permissions:
       contents: read
@@ -248,7 +248,7 @@ jobs:
   # ---------------------------------------------------------------------------
   generate_release_notes:
     name: Generate release notes
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:
