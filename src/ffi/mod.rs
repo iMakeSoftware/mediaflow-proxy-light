@@ -93,7 +93,7 @@ pub struct MediaflowServer {
 ///
 /// Returns a heap-allocated `MediaflowServer` pointer, or NULL on failure.
 /// The caller must eventually pass the pointer to `mediaflow_server_destroy`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn mediaflow_server_create(
     cfg: *const MediaflowConfig,
 ) -> *mut MediaflowServer {
@@ -102,12 +102,12 @@ pub unsafe extern "C" fn mediaflow_server_create(
         return std::ptr::null_mut();
     }
 
-    let cfg = &*cfg;
+    let cfg = unsafe { &*cfg };
 
     let host = if cfg.host.is_null() {
         "127.0.0.1".to_string()
     } else {
-        match CStr::from_ptr(cfg.host).to_str() {
+        match unsafe { CStr::from_ptr(cfg.host) }.to_str() {
             Ok(s) => s.to_string(),
             Err(_) => {
                 fire_log("[ffi] mediaflow_server_create: invalid host string");
@@ -119,7 +119,7 @@ pub unsafe extern "C" fn mediaflow_server_create(
     let api_password = if cfg.api_password.is_null() {
         String::new()
     } else {
-        CStr::from_ptr(cfg.api_password)
+        unsafe { CStr::from_ptr(cfg.api_password) }
             .to_str()
             .unwrap_or("")
             .to_string()
@@ -141,8 +141,8 @@ pub unsafe extern "C" fn mediaflow_server_create(
 ///
 /// Blocks until the server is bound and ready to accept connections.
 /// Returns `MediaflowStatus::Ok` on success.
-#[no_mangle]
-pub unsafe extern "C" fn mediaflow_server_start(srv: *mut MediaflowServer) -> MediaflowStatus {
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn mediaflow_server_start(srv: *mut MediaflowServer) -> MediaflowStatus { unsafe {
     if srv.is_null() {
         return MediaflowStatus::ErrConfig;
     }
@@ -189,7 +189,7 @@ pub unsafe extern "C" fn mediaflow_server_start(srv: *mut MediaflowServer) -> Me
                 }
             };
 
-            cfg.server.host = host.clone();
+            cfg.server.host = vec![host.clone()];
             cfg.server.port = port;
             if !api_password.is_empty() {
                 cfg.auth.api_password = api_password;
@@ -287,11 +287,11 @@ pub unsafe extern "C" fn mediaflow_server_start(srv: *mut MediaflowServer) -> Me
             MediaflowStatus::ErrInternal
         }
     }
-}
+}}
 
 /// Stop the server gracefully.
-#[no_mangle]
-pub unsafe extern "C" fn mediaflow_server_stop(srv: *mut MediaflowServer) -> MediaflowStatus {
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn mediaflow_server_stop(srv: *mut MediaflowServer) -> MediaflowStatus { unsafe {
     if srv.is_null() {
         return MediaflowStatus::ErrConfig;
     }
@@ -309,40 +309,40 @@ pub unsafe extern "C" fn mediaflow_server_stop(srv: *mut MediaflowServer) -> Med
     }
 
     MediaflowStatus::ErrInternal
-}
+}}
 
 /// Destroy the server handle and free memory.
 ///
 /// The server must be stopped before calling this, or resources may leak.
-#[no_mangle]
-pub unsafe extern "C" fn mediaflow_server_destroy(srv: *mut MediaflowServer) {
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn mediaflow_server_destroy(srv: *mut MediaflowServer) { unsafe {
     if !srv.is_null() {
         drop(Box::from_raw(srv));
     }
-}
+}}
 
 /// Returns `true` if the server is currently running.
-#[no_mangle]
-pub unsafe extern "C" fn mediaflow_server_is_running(srv: *const MediaflowServer) -> bool {
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn mediaflow_server_is_running(srv: *const MediaflowServer) -> bool { unsafe {
     if srv.is_null() {
         return false;
     }
     (*srv).is_running.load(Ordering::SeqCst)
-}
+}}
 
 /// Returns the actual bound port (useful when `port` was 0 in config).
-#[no_mangle]
-pub unsafe extern "C" fn mediaflow_server_port(srv: *const MediaflowServer) -> u16 {
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn mediaflow_server_port(srv: *const MediaflowServer) -> u16 { unsafe {
     if srv.is_null() {
         return 0;
     }
     (*srv).actual_port.load(Ordering::SeqCst)
-}
+}}
 
 /// Set a log callback. Pass NULL to clear.
 ///
 /// The callback is invoked from background threads; it must be thread-safe.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn mediaflow_set_log_callback(
     cb: Option<LogCallbackFn>,
     userdata: *mut c_void,
@@ -355,8 +355,8 @@ pub unsafe extern "C" fn mediaflow_set_log_callback(
 /// Returns the base proxy URL as a heap-allocated C string.
 ///
 /// Caller must pass the returned pointer to `mediaflow_free_string`.
-#[no_mangle]
-pub unsafe extern "C" fn mediaflow_get_proxy_url(srv: *const MediaflowServer) -> *mut c_char {
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn mediaflow_get_proxy_url(srv: *const MediaflowServer) -> *mut c_char { unsafe {
     if srv.is_null() {
         return std::ptr::null_mut();
     }
@@ -367,24 +367,24 @@ pub unsafe extern "C" fn mediaflow_get_proxy_url(srv: *const MediaflowServer) ->
         Ok(cs) => cs.into_raw(),
         Err(_) => std::ptr::null_mut(),
     }
-}
+}}
 
 /// Free a C string previously returned by an FFI function.
-#[no_mangle]
-pub unsafe extern "C" fn mediaflow_free_string(ptr: *mut c_char) {
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn mediaflow_free_string(ptr: *mut c_char) { unsafe {
     if !ptr.is_null() {
         drop(CString::from_raw(ptr));
     }
-}
+}}
 
 /// Persist a JSON config snapshot to the given file path.
 ///
 /// Returns `MediaflowStatus::Ok` on success.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn mediaflow_save_config(
     srv: *const MediaflowServer,
     path: *const c_char,
-) -> MediaflowStatus {
+) -> MediaflowStatus { unsafe {
     if srv.is_null() || path.is_null() {
         return MediaflowStatus::ErrConfig;
     }
@@ -408,16 +408,16 @@ pub unsafe extern "C" fn mediaflow_save_config(
             MediaflowStatus::ErrInternal
         }
     }
-}
+}}
 
 /// Load a JSON config snapshot and apply it to the server handle.
 ///
 /// Does NOT restart the server; only updates stored values.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn mediaflow_load_config(
     srv: *mut MediaflowServer,
     path: *const c_char,
-) -> MediaflowStatus {
+) -> MediaflowStatus { unsafe {
     if srv.is_null() || path.is_null() {
         return MediaflowStatus::ErrConfig;
     }
@@ -454,4 +454,4 @@ pub unsafe extern "C" fn mediaflow_load_config(
     }
 
     MediaflowStatus::Ok
-}
+}}

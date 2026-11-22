@@ -30,12 +30,12 @@ RUN case "$TARGETPLATFORM" in \
     echo "Downloading $BINARY_NAME for $TARGETPLATFORM (release: ${RELEASE_VERSION})" && \
     curl -fL --retry 3 --retry-delay 2 \
         -o mediaflow-proxy-light \
-        "https://github.com/mhdzumair/MediaFlow-Proxy-Light/releases/download/${RELEASE_VERSION}/${BINARY_NAME}" && \
+        "https://github.com/iMakeSoftware/MediaFlow-Proxy-Light/releases/download/${RELEASE_VERSION}/${BINARY_NAME}" && \
     chmod +x mediaflow-proxy-light
 
 # ── Runtime stage ──────────────────────────────────────────────────────────
 # distroless/cc-debian12 provides glibc + libgcc (required by our Rust
-# binary, which links libstdc++ via rquest's boring-sys).  No shell, no
+# binary, which links libstdc++ via boring-sys).  No shell, no
 # package manager — ~20 MB total.
 FROM gcr.io/distroless/cc-debian12
 
