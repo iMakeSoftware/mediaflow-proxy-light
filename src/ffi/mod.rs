@@ -142,202 +142,212 @@ pub unsafe extern "C" fn mediaflow_server_create(
 /// Blocks until the server is bound and ready to accept connections.
 /// Returns `MediaflowStatus::Ok` on success.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn mediaflow_server_start(srv: *mut MediaflowServer) -> MediaflowStatus { unsafe {
-    if srv.is_null() {
-        return MediaflowStatus::ErrConfig;
-    }
-    let server = &*srv;
+pub unsafe extern "C" fn mediaflow_server_start(srv: *mut MediaflowServer) -> MediaflowStatus {
+    unsafe {
+        if srv.is_null() {
+            return MediaflowStatus::ErrConfig;
+        }
+        let server = &*srv;
 
-    if server.is_running.load(Ordering::SeqCst) {
-        return MediaflowStatus::ErrAlreadyRunning;
-    }
+        if server.is_running.load(Ordering::SeqCst) {
+            return MediaflowStatus::ErrAlreadyRunning;
+        }
 
-    let host = server.host.clone();
-    let port = server.port;
-    let api_password = server.api_password.clone();
+        let host = server.host.clone();
+        let port = server.port;
+        let api_password = server.api_password.clone();
 
-    // Oneshot channel: background thread → this thread, signals that the
-    // server is bound (or failed). The sender value is the actual bound port.
-    let (ready_tx, ready_rx) = std::sync::mpsc::sync_channel::<Result<u16, String>>(1);
-    // Shutdown channel.
-    let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
+        // Oneshot channel: background thread → this thread, signals that the
+        // server is bound (or failed). The sender value is the actual bound port.
+        let (ready_tx, ready_rx) = std::sync::mpsc::sync_channel::<Result<u16, String>>(1);
+        // Shutdown channel.
+        let (shutdown_tx, shutdown_rx) = tokio::sync::oneshot::channel::<()>();
 
-    let is_running = Arc::clone(&server.is_running);
-    let actual_port = Arc::clone(&server.actual_port);
+        let is_running = Arc::clone(&server.is_running);
+        let actual_port = Arc::clone(&server.actual_port);
 
-    // Spawn a dedicated OS thread with its own tokio runtime.
-    std::thread::spawn(move || {
-        let rt = match tokio::runtime::Builder::new_multi_thread()
-            .worker_threads(2)
-            .enable_all()
-            .build()
-        {
-            Ok(rt) => rt,
-            Err(e) => {
-                let _ = ready_tx.send(Err(format!("tokio runtime: {e}")));
-                return;
-            }
-        };
-
-        rt.block_on(async move {
-            // Build config from FFI params.
-            let mut cfg = match crate::config::Config::from_env() {
-                Ok(c) => c,
+        // Spawn a dedicated OS thread with its own tokio runtime.
+        std::thread::spawn(move || {
+            let rt = match tokio::runtime::Builder::new_multi_thread()
+                .worker_threads(2)
+                .enable_all()
+                .build()
+            {
+                Ok(rt) => rt,
                 Err(e) => {
-                    let _ = ready_tx.send(Err(format!("config: {e}")));
+                    let _ = ready_tx.send(Err(format!("tokio runtime: {e}")));
                     return;
                 }
             };
 
-            cfg.server.host = vec![host.clone()];
-            cfg.server.port = port;
-            if !api_password.is_empty() {
-                cfg.auth.api_password = api_password;
-            }
+            rt.block_on(async move {
+                // Build config from FFI params.
+                let mut cfg = match crate::config::Config::from_env() {
+                    Ok(c) => c,
+                    Err(e) => {
+                        let _ = ready_tx.send(Err(format!("config: {e}")));
+                        return;
+                    }
+                };
 
-            use crate::auth::middleware::AuthMiddleware;
-            use crate::proxy::{handler, stream::StreamManager};
-            use actix_cors::Cors;
-            use actix_web::middleware::Logger;
-            use actix_web::{App, HttpServer, middleware, web};
-            use std::sync::Arc;
+                cfg.server.host = vec![host.clone()];
+                cfg.server.port = port;
+                if !api_password.is_empty() {
+                    cfg.auth.api_password = api_password;
+                }
 
-            let auth_middleware = AuthMiddleware::new(cfg.auth.api_password.clone());
-            let stream_manager = StreamManager::new(cfg.proxy.clone());
-            let server_config = Arc::new(cfg.clone());
-            let host_bind = host.clone();
+                use crate::auth::middleware::AuthMiddleware;
+                use crate::proxy::{handler, stream::StreamManager};
+                use actix_cors::Cors;
+                use actix_web::middleware::Logger;
+                use actix_web::{App, HttpServer, middleware, web};
+                use std::sync::Arc;
 
-            let server = HttpServer::new(move || {
-                let config = Arc::clone(&server_config);
-                let cors = Cors::permissive();
+                let auth_middleware = AuthMiddleware::new(cfg.auth.api_password.clone());
+                let stream_manager = StreamManager::new(cfg.proxy.clone());
+                let server_config = Arc::new(cfg.clone());
+                let host_bind = host.clone();
 
-                App::new()
-                    .wrap(cors)
-                    .wrap(Logger::new("%a - \"%r\" %s"))
-                    .wrap(middleware::Compress::default())
-                    .wrap(auth_middleware.clone())
-                    .app_data(web::Data::new(stream_manager.clone()))
-                    .app_data(web::Data::new(config.clone()))
-                    .service(
-                        web::scope("/proxy")
-                            .route("/stream", web::get().to(handler::proxy_stream_get))
-                            .route("/stream", web::head().to(handler::proxy_stream_head))
-                            .route("/generate_url", web::post().to(handler::generate_url))
-                            .route("/ip", web::get().to(handler::get_public_ip)),
-                    )
-                    .service(web::scope("/health").route("", web::get().to(|| async { "OK" })))
-                    .default_service(web::route().to(|| async {
-                        actix_web::HttpResponse::NotFound().json(serde_json::json!({
-                            "error": "Not Found"
+                let server = HttpServer::new(move || {
+                    let config = Arc::clone(&server_config);
+                    let cors = Cors::permissive();
+
+                    App::new()
+                        .wrap(cors)
+                        .wrap(Logger::new("%a - \"%r\" %s"))
+                        .wrap(middleware::Compress::default())
+                        .wrap(auth_middleware.clone())
+                        .app_data(web::Data::new(stream_manager.clone()))
+                        .app_data(web::Data::new(config.clone()))
+                        .service(
+                            web::scope("/proxy")
+                                .route("/stream", web::get().to(handler::proxy_stream_get))
+                                .route("/stream", web::head().to(handler::proxy_stream_head))
+                                .route("/generate_url", web::post().to(handler::generate_url))
+                                .route("/ip", web::get().to(handler::get_public_ip)),
+                        )
+                        .service(web::scope("/health").route("", web::get().to(|| async { "OK" })))
+                        .default_service(web::route().to(|| async {
+                            actix_web::HttpResponse::NotFound().json(serde_json::json!({
+                                "error": "Not Found"
+                            }))
                         }))
-                    }))
+                });
+
+                let server = match server.bind((host_bind.as_str(), port)) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        let _ = ready_tx.send(Err(format!("bind: {e}")));
+                        return;
+                    }
+                };
+
+                // Determine the actual bound port (important when port=0).
+                let bound_port = server.addrs().first().map(|a| a.port()).unwrap_or(port);
+
+                // Signal readiness to the caller.
+                let _ = ready_tx.send(Ok(bound_port));
+
+                is_running.store(true, Ordering::SeqCst);
+                actual_port.store(bound_port, Ordering::SeqCst);
+
+                fire_log(&format!(
+                    "[ffi] Server listening on {host_bind}:{bound_port}"
+                ));
+
+                // Run until shutdown is requested.
+                let srv = server.run();
+                let handle = srv.handle();
+                tokio::select! {
+                    _ = srv => {},
+                    _ = shutdown_rx => {
+                        handle.stop(true).await;
+                    }
+                }
+
+                is_running.store(false, Ordering::SeqCst);
+                fire_log("[ffi] Server stopped");
             });
-
-            let server = match server.bind((host_bind.as_str(), port)) {
-                Ok(s) => s,
-                Err(e) => {
-                    let _ = ready_tx.send(Err(format!("bind: {e}")));
-                    return;
-                }
-            };
-
-            // Determine the actual bound port (important when port=0).
-            let bound_port = server.addrs().first().map(|a| a.port()).unwrap_or(port);
-
-            // Signal readiness to the caller.
-            let _ = ready_tx.send(Ok(bound_port));
-
-            is_running.store(true, Ordering::SeqCst);
-            actual_port.store(bound_port, Ordering::SeqCst);
-
-            fire_log(&format!(
-                "[ffi] Server listening on {host_bind}:{bound_port}"
-            ));
-
-            // Run until shutdown is requested.
-            let srv = server.run();
-            let handle = srv.handle();
-            tokio::select! {
-                _ = srv => {},
-                _ = shutdown_rx => {
-                    handle.stop(true).await;
-                }
-            }
-
-            is_running.store(false, Ordering::SeqCst);
-            fire_log("[ffi] Server stopped");
         });
-    });
 
-    // Wait for the background thread to signal readiness (or failure).
-    match ready_rx.recv() {
-        Ok(Ok(bound_port)) => {
-            server.actual_port.store(bound_port, Ordering::SeqCst);
-            if let Ok(mut guard) = server.shutdown_tx.lock() {
-                *guard = Some(shutdown_tx);
+        // Wait for the background thread to signal readiness (or failure).
+        match ready_rx.recv() {
+            Ok(Ok(bound_port)) => {
+                server.actual_port.store(bound_port, Ordering::SeqCst);
+                if let Ok(mut guard) = server.shutdown_tx.lock() {
+                    *guard = Some(shutdown_tx);
+                }
+                MediaflowStatus::Ok
             }
-            MediaflowStatus::Ok
-        }
-        Ok(Err(msg)) => {
-            fire_log(&format!("[ffi] Start failed: {msg}"));
-            MediaflowStatus::ErrBind
-        }
-        Err(_) => {
-            fire_log("[ffi] Start failed: channel closed");
-            MediaflowStatus::ErrInternal
+            Ok(Err(msg)) => {
+                fire_log(&format!("[ffi] Start failed: {msg}"));
+                MediaflowStatus::ErrBind
+            }
+            Err(_) => {
+                fire_log("[ffi] Start failed: channel closed");
+                MediaflowStatus::ErrInternal
+            }
         }
     }
-}}
+}
 
 /// Stop the server gracefully.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn mediaflow_server_stop(srv: *mut MediaflowServer) -> MediaflowStatus { unsafe {
-    if srv.is_null() {
-        return MediaflowStatus::ErrConfig;
-    }
-    let server = &*srv;
-
-    if !server.is_running.load(Ordering::SeqCst) {
-        return MediaflowStatus::ErrNotRunning;
-    }
-
-    if let Ok(mut guard) = server.shutdown_tx.lock() {
-        if let Some(tx) = guard.take() {
-            let _ = tx.send(());
-            return MediaflowStatus::Ok;
+pub unsafe extern "C" fn mediaflow_server_stop(srv: *mut MediaflowServer) -> MediaflowStatus {
+    unsafe {
+        if srv.is_null() {
+            return MediaflowStatus::ErrConfig;
         }
-    }
+        let server = &*srv;
 
-    MediaflowStatus::ErrInternal
-}}
+        if !server.is_running.load(Ordering::SeqCst) {
+            return MediaflowStatus::ErrNotRunning;
+        }
+
+        if let Ok(mut guard) = server.shutdown_tx.lock() {
+            if let Some(tx) = guard.take() {
+                let _ = tx.send(());
+                return MediaflowStatus::Ok;
+            }
+        }
+
+        MediaflowStatus::ErrInternal
+    }
+}
 
 /// Destroy the server handle and free memory.
 ///
 /// The server must be stopped before calling this, or resources may leak.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn mediaflow_server_destroy(srv: *mut MediaflowServer) { unsafe {
-    if !srv.is_null() {
-        drop(Box::from_raw(srv));
+pub unsafe extern "C" fn mediaflow_server_destroy(srv: *mut MediaflowServer) {
+    unsafe {
+        if !srv.is_null() {
+            drop(Box::from_raw(srv));
+        }
     }
-}}
+}
 
 /// Returns `true` if the server is currently running.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn mediaflow_server_is_running(srv: *const MediaflowServer) -> bool { unsafe {
-    if srv.is_null() {
-        return false;
+pub unsafe extern "C" fn mediaflow_server_is_running(srv: *const MediaflowServer) -> bool {
+    unsafe {
+        if srv.is_null() {
+            return false;
+        }
+        (*srv).is_running.load(Ordering::SeqCst)
     }
-    (*srv).is_running.load(Ordering::SeqCst)
-}}
+}
 
 /// Returns the actual bound port (useful when `port` was 0 in config).
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn mediaflow_server_port(srv: *const MediaflowServer) -> u16 { unsafe {
-    if srv.is_null() {
-        return 0;
+pub unsafe extern "C" fn mediaflow_server_port(srv: *const MediaflowServer) -> u16 {
+    unsafe {
+        if srv.is_null() {
+            return 0;
+        }
+        (*srv).actual_port.load(Ordering::SeqCst)
     }
-    (*srv).actual_port.load(Ordering::SeqCst)
-}}
+}
 
 /// Set a log callback. Pass NULL to clear.
 ///
@@ -356,26 +366,30 @@ pub unsafe extern "C" fn mediaflow_set_log_callback(
 ///
 /// Caller must pass the returned pointer to `mediaflow_free_string`.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn mediaflow_get_proxy_url(srv: *const MediaflowServer) -> *mut c_char { unsafe {
-    if srv.is_null() {
-        return std::ptr::null_mut();
+pub unsafe extern "C" fn mediaflow_get_proxy_url(srv: *const MediaflowServer) -> *mut c_char {
+    unsafe {
+        if srv.is_null() {
+            return std::ptr::null_mut();
+        }
+        let server = &*srv;
+        let port = server.actual_port.load(Ordering::SeqCst);
+        let url = format!("http://{}:{}", server.host, port);
+        match CString::new(url) {
+            Ok(cs) => cs.into_raw(),
+            Err(_) => std::ptr::null_mut(),
+        }
     }
-    let server = &*srv;
-    let port = server.actual_port.load(Ordering::SeqCst);
-    let url = format!("http://{}:{}", server.host, port);
-    match CString::new(url) {
-        Ok(cs) => cs.into_raw(),
-        Err(_) => std::ptr::null_mut(),
-    }
-}}
+}
 
 /// Free a C string previously returned by an FFI function.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn mediaflow_free_string(ptr: *mut c_char) { unsafe {
-    if !ptr.is_null() {
-        drop(CString::from_raw(ptr));
+pub unsafe extern "C" fn mediaflow_free_string(ptr: *mut c_char) {
+    unsafe {
+        if !ptr.is_null() {
+            drop(CString::from_raw(ptr));
+        }
     }
-}}
+}
 
 /// Persist a JSON config snapshot to the given file path.
 ///
@@ -384,31 +398,33 @@ pub unsafe extern "C" fn mediaflow_free_string(ptr: *mut c_char) { unsafe {
 pub unsafe extern "C" fn mediaflow_save_config(
     srv: *const MediaflowServer,
     path: *const c_char,
-) -> MediaflowStatus { unsafe {
-    if srv.is_null() || path.is_null() {
-        return MediaflowStatus::ErrConfig;
-    }
-    let server = &*srv;
-    let path_str = match CStr::from_ptr(path).to_str() {
-        Ok(s) => s,
-        Err(_) => return MediaflowStatus::ErrConfig,
-    };
+) -> MediaflowStatus {
+    unsafe {
+        if srv.is_null() || path.is_null() {
+            return MediaflowStatus::ErrConfig;
+        }
+        let server = &*srv;
+        let path_str = match CStr::from_ptr(path).to_str() {
+            Ok(s) => s,
+            Err(_) => return MediaflowStatus::ErrConfig,
+        };
 
-    let port = server.actual_port.load(Ordering::SeqCst);
-    let json = serde_json::json!({
-        "host": server.host,
-        "port": port,
-        "api_password": server.api_password,
-    });
+        let port = server.actual_port.load(Ordering::SeqCst);
+        let json = serde_json::json!({
+            "host": server.host,
+            "port": port,
+            "api_password": server.api_password,
+        });
 
-    match std::fs::write(path_str, json.to_string()) {
-        Ok(_) => MediaflowStatus::Ok,
-        Err(e) => {
-            fire_log(&format!("[ffi] save_config failed: {e}"));
-            MediaflowStatus::ErrInternal
+        match std::fs::write(path_str, json.to_string()) {
+            Ok(_) => MediaflowStatus::Ok,
+            Err(e) => {
+                fire_log(&format!("[ffi] save_config failed: {e}"));
+                MediaflowStatus::ErrInternal
+            }
         }
     }
-}}
+}
 
 /// Load a JSON config snapshot and apply it to the server handle.
 ///
@@ -417,41 +433,43 @@ pub unsafe extern "C" fn mediaflow_save_config(
 pub unsafe extern "C" fn mediaflow_load_config(
     srv: *mut MediaflowServer,
     path: *const c_char,
-) -> MediaflowStatus { unsafe {
-    if srv.is_null() || path.is_null() {
-        return MediaflowStatus::ErrConfig;
-    }
-    let server = &mut *srv;
-    let path_str = match CStr::from_ptr(path).to_str() {
-        Ok(s) => s,
-        Err(_) => return MediaflowStatus::ErrConfig,
-    };
-
-    let data = match std::fs::read_to_string(path_str) {
-        Ok(d) => d,
-        Err(e) => {
-            fire_log(&format!("[ffi] load_config read failed: {e}"));
-            return MediaflowStatus::ErrInternal;
-        }
-    };
-
-    let v: serde_json::Value = match serde_json::from_str(&data) {
-        Ok(v) => v,
-        Err(e) => {
-            fire_log(&format!("[ffi] load_config parse failed: {e}"));
+) -> MediaflowStatus {
+    unsafe {
+        if srv.is_null() || path.is_null() {
             return MediaflowStatus::ErrConfig;
         }
-    };
+        let server = &mut *srv;
+        let path_str = match CStr::from_ptr(path).to_str() {
+            Ok(s) => s,
+            Err(_) => return MediaflowStatus::ErrConfig,
+        };
 
-    if let Some(h) = v["host"].as_str() {
-        server.host = h.to_string();
-    }
-    if let Some(p) = v["port"].as_u64() {
-        server.port = p as u16;
-    }
-    if let Some(pw) = v["api_password"].as_str() {
-        server.api_password = pw.to_string();
-    }
+        let data = match std::fs::read_to_string(path_str) {
+            Ok(d) => d,
+            Err(e) => {
+                fire_log(&format!("[ffi] load_config read failed: {e}"));
+                return MediaflowStatus::ErrInternal;
+            }
+        };
 
-    MediaflowStatus::Ok
-}}
+        let v: serde_json::Value = match serde_json::from_str(&data) {
+            Ok(v) => v,
+            Err(e) => {
+                fire_log(&format!("[ffi] load_config parse failed: {e}"));
+                return MediaflowStatus::ErrConfig;
+            }
+        };
+
+        if let Some(h) = v["host"].as_str() {
+            server.host = h.to_string();
+        }
+        if let Some(p) = v["port"].as_u64() {
+            server.port = p as u16;
+        }
+        if let Some(pw) = v["api_password"].as_str() {
+            server.api_password = pw.to_string();
+        }
+
+        MediaflowStatus::Ok
+    }
+}
