@@ -1,6 +1,6 @@
 # Acknowledgements
 
-MediaFlow Proxy Light is a Rust reimplementation of [MediaFlow Proxy](https://github.com/mhdzumair/mediaflow-proxy) by [mhdzumair](https://github.com/mhdzumair).
+MediaFlow Proxy Light is a Rust reimplementation of [MediaFlow Proxy](https://github.com/mhdzumair/mediaflow-proxy) by [iMakeSoftware](https://github.com/iMakeSoftware).
 
 ## MediaFlow Proxy contributors
 
@@ -36,7 +36,7 @@ This project is built on the shoulders of the following open-source projects:
 | [actix-web](https://actix.rs/) | Web framework |
 | [tokio](https://tokio.rs/) | Async runtime |
 | [reqwest](https://github.com/seanmonstar/reqwest) | HTTP client |
-| [rquest](https://github.com/0x676e67/rquest) | Browser-impersonation HTTP client |
+| [wreq](https://github.com/0x676e67/wreq) | Browser-impersonation HTTP client |
 | [moka](https://github.com/moka-rs/moka) | In-process TTL cache |
 | [m3u8-rs](https://github.com/rutgersc/m3u8-rs) | HLS M3U8 parser |
 | [quick-xml](https://github.com/tafia/quick-xml) | DASH MPD XML parser |

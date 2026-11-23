@@ -1,8 +1,8 @@
 site_name: MediaFlow Proxy Light
 site_description: Documentation for MediaFlow Proxy Light — a high-performance Rust streaming proxy.
-site_url: https://mhdzumair.github.io/mediaflow-proxy-light/
-repo_url: https://github.com/mhdzumair/MediaFlow-Proxy-Light
-repo_name: mhdzumair/MediaFlow-Proxy-Light
+site_url: https://iMakeSoftware.github.io/mediaflow-proxy-light/
+repo_url: https://github.com/iMakeSoftware/MediaFlow-Proxy-Light
+repo_name: iMakeSoftware/MediaFlow-Proxy-Light
 edit_uri: edit/main/docs/
 
 theme:

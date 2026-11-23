@@ -12,7 +12,7 @@ A fully commented example ships with the source tree as
 [`config-example.toml`](https://github.com/iMakeSoftware/MediaFlow-Proxy-Light/blob/main/config-example.toml):
 
 ```bash
-wget https://raw.githubusercontent.com/mhdzumair/MediaFlow-Proxy-Light/main/config-example.toml -O config.toml
+wget https://raw.githubusercontent.com/iMakeSoftware/MediaFlow-Proxy-Light/main/config-example.toml -O config.toml
 ```
 
 ---

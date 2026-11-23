@@ -9,7 +9,7 @@
 # TLS backend: `tls-rustls` (the crate default) → no system OpenSSL needed.
 # ---------------------------------------------------------------------------
 
-FROM rust:1.95-slim-bookworm AS builder
+FROM rust:1.100-slim-bookworm AS builder
 
 WORKDIR /usr/src/app
 

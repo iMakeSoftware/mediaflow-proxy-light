@@ -77,7 +77,7 @@ Host names are **case-insensitive**.
 
 ## Installation
 
-Download the latest release from the [Releases](https://github.com/mhdzumair/MediaFlow-Proxy-Light/releases) page.
+Download the latest release from the [Releases](https://github.com/iMakeSoftware/MediaFlow-Proxy-Light/releases) page.
 
 | Platform | Binary |
 |---|---|
@@ -95,7 +95,7 @@ docker run -d \
   -e APP__SERVER__HOST=0.0.0.0 \
   -e APP__SERVER__PORT=8888 \
   -e APP__AUTH__API_PASSWORD=your-secure-password \
-  ghcr.io/mhdzumair/mediaflow-proxy-light:latest
+  ghcr.io/iMakeSoftware/mediaflow-proxy-light:latest
 ```
 
 Supports `linux/amd64` and `linux/arm64`.
@@ -103,7 +103,7 @@ Supports `linux/amd64` and `linux/arm64`.
 ### Linux / macOS binary
 
 ```bash
-wget https://github.com/mhdzumair/MediaFlow-Proxy-Light/releases/latest/download/mediaflow-proxy-light-linux-x86_64
+wget https://github.com/iMakeSoftware/MediaFlow-Proxy-Light/releases/latest/download/mediaflow-proxy-light-linux-x86_64
 chmod +x mediaflow-proxy-light-linux-x86_64
 sudo mv mediaflow-proxy-light-linux-x86_64 /usr/local/bin/mediaflow-proxy-light
 mediaflow-proxy-light
@@ -180,7 +180,7 @@ APP__LOG_LEVEL=info
 
 ```bash
 # Download example
-wget https://raw.githubusercontent.com/mhdzumair/MediaFlow-Proxy-Light/main/config-example.toml -O config.toml
+wget https://raw.githubusercontent.com/iMakeSoftware/MediaFlow-Proxy-Light/main/config-example.toml -O config.toml
 # Start with config
 CONFIG_PATH=/path/to/config.toml mediaflow-proxy-light
 ```
@@ -328,7 +328,7 @@ Published measurements and the reqwest-vs-Go analysis:
 ### Build
 
 ```bash
-git clone https://github.com/mhdzumair/MediaFlow-Proxy-Light
+git clone https://github.com/iMakeSoftware/MediaFlow-Proxy-Light
 cd mediaflow-proxy-light
 cargo build --release
 CONFIG_PATH=./config.toml ./target/release/mediaflow-proxy-light

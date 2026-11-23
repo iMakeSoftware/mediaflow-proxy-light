@@ -35,7 +35,7 @@ endif
 		if (message != "") print "- " message; \
 		if (description != "") printf "%s", description; \
 	}'
-	@echo "--- \n### 🤝 Contributors (if GitHub usernames are available in the reference, use @username format; otherwise fallback to these names): $(CONTRIBUTORS)\n\n### 📄 Full Changelog:\nhttps://github.com/mhdzumair/MediaFlow-Proxy-Light/compare/$(VERSION_OLD)...$(VERSION_NEW)";
+	@echo "--- \n### 🤝 Contributors (if GitHub usernames are available in the reference, use @username format; otherwise fallback to these names): $(CONTRIBUTORS)\n\n### 📄 Full Changelog:\nhttps://github.com/iMakeSoftware/MediaFlow-Proxy-Light/compare/$(VERSION_OLD)...$(VERSION_NEW)";
 ifneq ($(strip $(GITHUB_RELEASE_BODY_FILE)),)
 	@if [ -f "$(GITHUB_RELEASE_BODY_FILE)" ]; then \
 		echo "\n--- \n### GitHub-generated release notes reference (for contributor usernames):\n"; \

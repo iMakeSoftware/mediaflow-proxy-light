@@ -2,7 +2,7 @@
 
 ## Pre-built binaries
 
-Download the latest binary for your platform from the [Releases](https://github.com/mhdzumair/MediaFlow-Proxy-Light/releases) page.
+Download the latest binary for your platform from the [Releases](https://github.com/iMakeSoftware/MediaFlow-Proxy-Light/releases) page.
 
 | Platform | Binary |
 |---|---|
@@ -15,7 +15,7 @@ Download the latest binary for your platform from the [Releases](https://github.
 ### Linux / macOS
 
 ```bash
-wget https://github.com/mhdzumair/MediaFlow-Proxy-Light/releases/latest/download/mediaflow-proxy-light-linux-x86_64
+wget https://github.com/iMakeSoftware/MediaFlow-Proxy-Light/releases/latest/download/mediaflow-proxy-light-linux-x86_64
 chmod +x mediaflow-proxy-light-linux-x86_64
 sudo mv mediaflow-proxy-light-linux-x86_64 /usr/local/bin/mediaflow-proxy-light
 
@@ -48,7 +48,7 @@ docker run -d \
   -e APP__AUTH__API_PASSWORD=your-secure-password \
   --name mediaflow-proxy-light \
   --restart unless-stopped \
-  ghcr.io/mhdzumair/mediaflow-proxy-light:latest
+  ghcr.io/iMakeSoftware/mediaflow-proxy-light:latest
 ```
 
 ### Docker Compose
@@ -56,7 +56,7 @@ docker run -d \
 ```yaml
 services:
   mediaflow-proxy-light:
-    image: ghcr.io/mhdzumair/mediaflow-proxy-light:latest
+    image: ghcr.io/iMakeSoftware/mediaflow-proxy-light:latest
     ports:
       - "8888:8888"
     environment:
@@ -70,7 +70,7 @@ services:
 ```yaml
 services:
   mediaflow-proxy-light:
-    image: ghcr.io/mhdzumair/mediaflow-proxy-light:latest
+    image: ghcr.io/iMakeSoftware/mediaflow-proxy-light:latest
     ports:
       - "8888:8888"
     environment:
@@ -143,7 +143,7 @@ adb install mediaflow-proxy-tv-arm64-v8a.apk
 > [!WARNING]
 > Google Play Protect will show **"Harmful app blocked"** when you install the APK. This is a **false positive** — tap **More details → Install anyway**.
 
-The warning is triggered by a combination of factors that are all necessary for the proxy to work: the app spawns a native subprocess, opens a TCP listener on port 8888, and requests battery-optimization exemption so streams do not stall when backgrounded. Nothing is uploaded or exfiltrated. The proxy binary source is at [mediaflow-proxy-light](https://github.com/mhdzumair/mediaflow-proxy-light) and every release is built reproducibly from tagged commits.
+The warning is triggered by a combination of factors that are all necessary for the proxy to work: the app spawns a native subprocess, opens a TCP listener on port 8888, and requests battery-optimization exemption so streams do not stall when backgrounded. Nothing is uploaded or exfiltrated. The proxy binary source is at [mediaflow-proxy-light](https://github.com/iMakeSoftware/mediaflow-proxy-light) and every release is built reproducibly from tagged commits.
 
 ### First-time setup
 
@@ -188,7 +188,7 @@ For Telegram MTProto streaming setup, see [Telegram proxy](usage/telegram.md).
 - FFmpeg (optional, required for transcoding feature)
 
 ```bash
-git clone https://github.com/mhdzumair/MediaFlow-Proxy-Light
+git clone https://github.com/iMakeSoftware/MediaFlow-Proxy-Light
 cd MediaFlow-Proxy-Light
 cargo build --release
 

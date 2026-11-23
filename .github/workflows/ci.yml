@@ -59,13 +59,50 @@ jobs:
           cargo test --release --test auth_tests --test config_tests -- --test-threads=1
 
   # ---------------------------------------------------------------------------
+  # Android cross-compile smoke test (arm64 only — covers 95%+ of devices)
+  # ---------------------------------------------------------------------------
+  android-smoke:
+    name: Android · arm64-v8a smoke build
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          targets: aarch64-linux-android
+
+      - name: Set up Android NDK
+        id: ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26d
+
+      - name: Build
+        env:
+          ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
+        run: |
+          TOOLCHAIN="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64"
+          export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$TOOLCHAIN/bin/aarch64-linux-android21-clang"
+          export CC_aarch64_linux_android="$TOOLCHAIN/bin/aarch64-linux-android21-clang"
+          export AR_aarch64_linux_android="$TOOLCHAIN/bin/llvm-ar"
+          export RANLIB_aarch64_linux_android="$TOOLCHAIN/bin/llvm-ranlib"
+          # tls-rustls instead of tls-native/vendored-openssl: avoids linker
+          # conflicts between OpenSSL and BoringSSL.
+          cargo build \
+            --release \
+            --target aarch64-linux-android \
+            --no-default-features \
+            --features "hls,mpd,drm,xtream,extractors,telegram,acestream,web-ui,base64-url,tls-rustls"
+
+  # ---------------------------------------------------------------------------
   # Linux ARM64 smoke test (native aarch64 build)
   # ---------------------------------------------------------------------------
   linux-arm64-smoke:
     name: Linux aarch64 smoke build
     # Native ARM runner — avoids cross-compile entirely (and boring-sys2 issues)
-    runs-on: ubuntu-26.04-arm 
-    
+    runs-on: ubuntu-26.04-arm
     steps:
       - uses: actions/checkout@v7
 

@@ -8,7 +8,7 @@ MediaFlow Proxy Light is a high-performance streaming proxy written in Rust — 
 docker run -d \
   -p 8888:8888 \
   -e APP__AUTH__API_PASSWORD=your-secure-password \
-  ghcr.io/mhdzumair/mediaflow-proxy-light:latest
+  ghcr.io/iMakeSoftware/mediaflow-proxy-light:latest
 ```
 
 Open the URL generator at `http://localhost:8888/` and the health endpoint at `http://localhost:8888/health`.
@@ -28,6 +28,6 @@ Open the URL generator at `http://localhost:8888/` and the health endpoint at `h
 
 ## Project links
 
-- [Source on GitHub](https://github.com/mhdzumair/MediaFlow-Proxy-Light)
-- [Docker image on GHCR](https://github.com/mhdzumair/MediaFlow-Proxy-Light/pkgs/container/mediaflow-proxy-light)
+- [Source on GitHub](https://github.com/iMakeSoftware/MediaFlow-Proxy-Light)
+- [Docker image on GHCR](https://github.com/iMakeSoftware/MediaFlow-Proxy-Light/pkgs/container/mediaflow-proxy-light)
 - [MediaFlow Proxy (Python)](https://github.com/mhdzumair/mediaflow-proxy)

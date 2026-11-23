@@ -56,7 +56,7 @@ docker run -d \
   -e APP__TELEGRAM__API_ID=12345678 \
   -e APP__TELEGRAM__API_HASH=abcdef1234567890abcdef1234567890 \
   -e APP__TELEGRAM__SESSION_STRING="<session string>" \
-  ghcr.io/mhdzumair/mediaflow-proxy-light:latest
+  ghcr.io/iMakeSoftware/mediaflow-proxy-light:latest
 ```
 
 ### TOML config file

@@ -5,7 +5,7 @@
 ARG BINARY_PATH=target/release/mediaflow-proxy-light
 
 # Runtime stage - use distroless for smaller size and better security
-FROM gcr.io/distroless/cc-debian11
+FROM gcr.io/distroless/cc-debian12
 
 WORKDIR /app
 

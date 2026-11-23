@@ -79,7 +79,7 @@ All Dockerfiles use `gcr.io/distroless/cc-debian12` as the runtime base — a mi
 ```yaml
 services:
   proxy:
-    image: ghcr.io/mhdzumair/mediaflow-proxy-light:latest
+    image: ghcr.io/iMakeSoftware/mediaflow-proxy-light:latest
     ports:
       - "8888:8888"
     environment:

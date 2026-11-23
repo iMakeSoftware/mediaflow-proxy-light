@@ -1,11 +1,11 @@
 # Contributing
 
-Contributions are welcome. Please open a Pull Request on [GitHub](https://github.com/mhdzumair/MediaFlow-Proxy-Light).
+Contributions are welcome. Please open a Pull Request on [GitHub](https://github.com/iMakeSoftware/MediaFlow-Proxy-Light).
 
 ## Development setup
 
 ```bash
-git clone https://github.com/mhdzumair/MediaFlow-Proxy-Light
+git clone https://github.com/iMakeSoftware/MediaFlow-Proxy-Light
 cd MediaFlow-Proxy-Light
 cargo build
 ```
@@ -40,7 +40,7 @@ Extractors live in `src/extractors/`. Each extractor is a Rust struct that imple
 
 ## Reporting issues
 
-Please open an issue on [GitHub](https://github.com/mhdzumair/MediaFlow-Proxy-Light/issues) with:
+Please open an issue on [GitHub](https://github.com/iMakeSoftware/MediaFlow-Proxy-Light/issues) with:
 
 - Your platform and version
 - Steps to reproduce
