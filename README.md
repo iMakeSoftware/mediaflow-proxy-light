@@ -2,7 +2,7 @@
 
 A high-performance streaming proxy written in Rust. A lightweight, drop-in-compatible reimplementation of [MediaFlow Proxy](https://github.com/mhdzumair/mediaflow-proxy), optimised for throughput and low latency.
 
-**[Full documentation](https://mhdzumair.github.io/mediaflow-proxy-light/)**  ·  **[Performance benchmarks](https://mhdzumair.github.io/mediaflow-proxy-light/benchmark/)**
+**[Full documentation](https://iMakeSoftware.github.io/mediaflow-proxy-light/)**  ·  **[Performance benchmarks](https://iMakeSoftware.github.io/mediaflow-proxy-light/benchmark/)**
 
 ## Performance at a glance
 
