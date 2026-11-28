@@ -61,6 +61,11 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
           targets: aarch64-unknown-linux-gnu
 
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "linux-arm64-minimal"
+
       - name: Build
         run: cargo build --release --target aarch64-unknown-linux-gnu --no-default-features --features "web-ui,base64-url,tls-rustls"
       - name: Create Release and Upload Binary

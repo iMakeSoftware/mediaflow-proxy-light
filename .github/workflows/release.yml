@@ -58,6 +58,11 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
           targets: ${{ matrix.target }}
 
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "desktop-${{ matrix.target }}"
+
       - name: Build
         # Default features include `tls-rustls` (pure-Rust TLS), so no system
         # OpenSSL is needed on any target.  Each matrix entry runs on a native
@@ -90,14 +95,10 @@ jobs:
           toolchain: ${{ env.RUST_VERSION }}
           targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
 
-      - name: Cache cargo build
-        uses: actions/cache@v6
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ios-cargo-${{ hashFiles('**/Cargo.lock') }}
+          prefix-key: "ios-xcframework"
 
       - name: Build xcframework
         run: ./tools/build-ios.sh
@@ -152,6 +153,11 @@ jobs:
         uses: nttld/setup-ndk@v1
         with:
           ndk-version: r26d
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: "android-${{ matrix.abi }}"
 
       - name: Build for ${{ matrix.abi }}
         env:
